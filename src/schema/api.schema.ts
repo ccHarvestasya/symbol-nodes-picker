@@ -2,35 +2,10 @@ import { Prop, Schema, SchemaFactory, raw } from '@nestjs/mongoose';
 import mongoose, { HydratedDocument, SchemaTimestampsConfig } from 'mongoose';
 
 /**
- * ファイナライゼーション
- */
-export class Finalization {
-  /**
-   * ブロック高
-   */
-  height: bigint;
-
-  /**
-   * エポック
-   */
-  epoch: number;
-
-  /**
-   * ポイント
-   */
-  point: number;
-
-  /**
-   * ハッシュ
-   */
-  hash: string;
-}
-
-/**
- * ピア
+ * Api
  */
 @Schema({ timestamps: true })
-export class Peer {
+export class Api {
   /**
    * ホスト
    */
@@ -111,13 +86,18 @@ export class Peer {
   finalization: Record<string, any>;
 
   /**
-   * 証明書有効期限
+   * WebSocket
    */
-  @Prop()
-  certificateExpirationDate: Date;
+  @Prop(
+    raw({
+      isAvailable: { type: Boolean },
+      isHttpsEnabled: { type: Boolean },
+    }),
+  )
+  websocket: Record<string, any>;
 }
 
-export type PeerDocument = HydratedDocument<Peer, SchemaTimestampsConfig>;
-export const PeerSchema = SchemaFactory.createForClass(Peer);
+export type ApiDocument = HydratedDocument<Api, SchemaTimestampsConfig>;
+export const ApiSchema = SchemaFactory.createForClass(Api);
 
-PeerSchema.index({ host: 1, publicKey: 1 }, { unique: true });
+ApiSchema.index({ host: 1, publicKey: 1 }, { unique: true });

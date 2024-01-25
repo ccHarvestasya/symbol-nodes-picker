@@ -2,19 +2,25 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Peer, PeerDocument } from '../../schema/peer.schema';
+import { PeerCreateDto } from './dto/peerCreateDto';
+import { PeerKeyDto } from './dto/peerKeyDto';
+import { PeerUpdateDto } from './dto/peerUpdateDto';
 import { PeersFindDto } from './dto/peersFindDto';
 
 @Injectable()
 export class PeersRepository {
   constructor(@InjectModel(Peer.name) private peerModel: Model<PeerDocument>) {}
 
-  async create(peer: Peer): Promise<Peer> {
-    const createdPeer = await this.peerModel.create(peer);
+  async create(peerCreateDto: PeerCreateDto): Promise<PeerDocument> {
+    const createdPeer = await this.peerModel.create(peerCreateDto);
     return createdPeer;
-    // return createdPeer.save();
   }
 
-  async findAll(peersFindDto?: PeersFindDto): Promise<Peer[]> {
+  async updateOne(peerKeyDto: PeerKeyDto, peerUpdateDto: PeerUpdateDto) {
+    return this.peerModel.updateOne(peerKeyDto, peerUpdateDto).exec();
+  }
+
+  async findAll(peersFindDto?: PeersFindDto): Promise<PeerDocument[]> {
     return this.peerModel.find(peersFindDto).exec();
   }
 
@@ -22,7 +28,7 @@ export class PeersRepository {
    * Peer Find One
    * @returns Peer コレクション
    */
-  async findOne(peersFindDto?: PeersFindDto): Promise<Peer> {
+  async findOne(peersFindDto?: PeersFindDto): Promise<PeerDocument> {
     return this.peerModel.findOne(peersFindDto).exec();
   }
 }

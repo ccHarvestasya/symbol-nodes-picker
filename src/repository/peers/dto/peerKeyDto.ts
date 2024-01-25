@@ -1,4 +1,4 @@
-export class PeersFindDto {
+export class PeerKeyDto {
   host: string;
   publicKey: string;
 }

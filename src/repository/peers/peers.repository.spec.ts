@@ -77,7 +77,7 @@ describe('PeersRepository', () => {
     model = module.get<Model<PeerDocument>>(getModelToken('Peer'));
   });
 
-  it('定義の確認', () => {
+  it('PeersRepository定義の確認', () => {
     expect(service).toBeDefined();
   });
 

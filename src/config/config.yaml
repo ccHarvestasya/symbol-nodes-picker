@@ -1,0 +1,12 @@
+db:
+  mongo:
+    uri: 'mongodb://127.0.0.1:27017/sncrawler'
+connection:
+  init-host:
+    - '20.48.92.124'
+    - 'sym-test-01.opening-line.jp'
+    - 'mikun-testnet.tk'
+    - '001-sai-dual.symboltest.net'
+  timeout: 5000
+  request-count: 150
+  request-chunk: 10
