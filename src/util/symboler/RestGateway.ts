@@ -2,6 +2,9 @@ import { Logger } from '@nestjs/common';
 import axios, { AxiosResponse } from 'axios';
 import { NodeInfo } from './model/NodeInfo';
 
+/**
+ * Rest Gateway から値を取得する
+ */
 export class RestGateway {
   /**
    * ロガー

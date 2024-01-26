@@ -4,6 +4,13 @@
   "sourceRoot": "src",
   "compilerOptions": {
     "deleteOutDir": true,
-    "assets": [{ "include": "./config/*.yaml", "outDir": "./dist", "watchAssets": true }]
+    "assets": [
+      { "include": "./config/*.yaml", "outDir": "./dist", "watchAssets": true },
+      {
+        "include": "util/symboler/cert/*.pem",
+        "outDir": "./dist",
+        "watchAssets": true
+      }
+    ]
   }
 }

@@ -20,7 +20,15 @@ export class PeersRepository {
     return this.peerModel.updateOne(peerKeyDto, peerUpdateDto).exec();
   }
 
-  async findAll(peersFindDto?: PeersFindDto): Promise<PeerDocument[]> {
+  async findAll(): Promise<PeerDocument[]> {
+    return this.peerModel.find().exec();
+  }
+
+  async findLimit(peersFindDto: PeersFindDto, limit: number): Promise<PeerDocument[]> {
+    return this.peerModel.find(peersFindDto).limit(limit).exec();
+  }
+
+  async find(peersFindDto: PeersFindDto): Promise<PeerDocument[]> {
     return this.peerModel.find(peersFindDto).exec();
   }
 

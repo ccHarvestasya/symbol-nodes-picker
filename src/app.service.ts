@@ -1,7 +1,8 @@
+import { PeersRepository } from '@/repository/peers/peers.repository';
+import { RestGateway } from '@/util/symboler/RestGateway';
+import { SslSocket } from '@/util/symboler/SslSocket';
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { PeersRepository } from './repository/peers/peers.repository';
-import { RestGateway } from './util/symboler/RestGateway';
 
 @Injectable()
 export class AppService {
@@ -48,7 +49,38 @@ export class AppService {
     this.logger.verbose(' end  - ' + methodName);
   }
 
+  async registerPeer2Peers() {
+    const methodName = 'registerPeer2Peers';
+    this.logger.verbose('start - ' + methodName);
+
+    const sslScoket = new SslSocket();
+    await sslScoket.getNodeInfo('symbol02.harvestasya.com', 7900);
+
+    //   // リクエスト上限まで取得
+    //   const peersDocs = await this.peersRepository.findLimit(
+    //     new PeersFindDto(),
+    //     this.configService.get<number>('request-count'),
+    //   );
+
+    //   // チャンク数
+    //   const chunk =
+    //     peersDocs.length < this.configService.get<number>('request-chunk')
+    //       ? peersDocs.length
+    //       : this.configService.get<number>('request-chunk');
+
+    //   // チャンク数分並列処理
+    //   const promises: Promise<void>[] = [];
+    //   for (let i = 0; i < chunk; i++) {
+    //     promises.push(this.getNodePeers(peers));
+    //   }
+    //   await Promise.all(promises);
+
+    this.logger.verbose(' end  - ' + methodName);
+  }
+
   getHello(): string {
     return 'Hello World!';
   }
+
+  // private async registerPeer2PeersParallel() {}
 }

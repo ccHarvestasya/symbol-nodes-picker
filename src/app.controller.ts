@@ -1,5 +1,6 @@
+import { AppService } from '@/app.service';
 import { Controller, Get, Logger } from '@nestjs/common';
-import { AppService } from './app.service';
+import { SslSocket } from './util/symboler/SslSocket';
 
 @Controller()
 export class AppController {
@@ -72,5 +73,36 @@ export class AppController {
   @Get()
   getHello(): string {
     return this.appService.getHello();
+  }
+
+  // TODO 以下確認用
+  @Get('/socket/chaininfo')
+  async getSocketChainInfo(): Promise<string> {
+    const sslScoket = new SslSocket();
+    return JSON.stringify(
+      await sslScoket.getChainInfo('symbol02.harvestasya.com', 7900),
+      // await sslScoket.getChainInfo('4t.dusanjp.com', 7900),
+      (key, value) => {
+        return typeof value === 'bigint' ? value.toString() : value;
+      },
+    );
+  }
+
+  @Get('/socket/nodeinfo')
+  async getSocketNodeInfo(): Promise<string> {
+    const sslScoket = new SslSocket();
+    return JSON.stringify(await sslScoket.getNodeInfo('symbol02.harvestasya.com', 7900));
+  }
+
+  @Get('/socket/nodepeers')
+  async getSocketNodePeers(): Promise<string> {
+    const sslScoket = new SslSocket();
+    return JSON.stringify(await sslScoket.getNodePeers('symbol02.harvestasya.com', 7900));
+  }
+
+  @Get('/socket/unlockedaccount')
+  async getSocketNodeUnlockedAccount(): Promise<string> {
+    const sslScoket = new SslSocket();
+    return JSON.stringify(await sslScoket.getNodeUnlockedAccount('symbol02.harvestasya.com', 7900));
   }
 }

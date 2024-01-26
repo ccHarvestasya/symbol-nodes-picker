@@ -1,11 +1,11 @@
+import { AppController } from '@/app.controller';
+import { AppService } from '@/app.service';
+import configuration from '@/config/configuration';
+import { PeersModule } from '@/repository/peers/peers.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ScheduleModule } from '@nestjs/schedule';
 import { Test, TestingModule } from '@nestjs/testing';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import configuration from './config/configuration';
-import { PeersModule } from './repository/peers/peers.module';
 
 describe('AppController', () => {
   let appController: AppController;

@@ -1,5 +1,5 @@
 {
-  "name": "symbol-node-crawler",
+  "name": "sn-librarian",
   "version": "0.0.1",
   "description": "",
   "author": "",
@@ -71,6 +71,9 @@
       "**/*.(t|j)s"
     ],
     "coverageDirectory": "../coverage",
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "moduleNameMapper": {
+      "^@/(.*)$": "<rootDir>/$1"
+    }
   }
 }
