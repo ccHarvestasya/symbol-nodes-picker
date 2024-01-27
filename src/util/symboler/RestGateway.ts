@@ -1,6 +1,10 @@
 import { Logger } from '@nestjs/common';
 import axios, { AxiosResponse } from 'axios';
+import { ChainInfo } from './model/ChainInfo';
+import { NetworkProperties } from './model/NetworkProperties';
 import { NodeInfo } from './model/NodeInfo';
+import { NodePeer } from './model/NodePeer';
+import { NodeUnlockedAccount } from './model/NodeUnlockedAccount';
 
 /**
  * Rest Gateway から値を取得する
@@ -18,11 +22,53 @@ export class RestGateway {
   constructor(private readonly timeout: number = 3000) {}
 
   /**
-   * NodeInfo取得(トライSSL)
+   * ChainInfo取得(トライHTTPs)
+   * @param host ホスト名
+   * @returns 成功: ChainInfo, 失敗: undefined
+   */
+  async tryHttpsChainInfo(host: string): Promise<ChainInfo> {
+    let chainInfo: ChainInfo = undefined;
+
+    const path = '/chain/info';
+    const baseUrl = `https://${host}:3001`;
+    this.logger.debug(`${baseUrl}${path}`);
+
+    try {
+      chainInfo = await this.requestRestGateway<ChainInfo>(baseUrl, path);
+    } catch (e) {
+      chainInfo = await this.getChainInfo(host);
+    }
+
+    return chainInfo;
+  }
+
+  /**
+   * ChainInfo取得
+   * @param host ホスト名
+   * @returns 成功: ChainInfo, 失敗: undefined
+   */
+  async getChainInfo(host: string): Promise<ChainInfo> {
+    let chainInfo: ChainInfo = undefined;
+
+    const path = '/chain/info';
+    const baseUrl = `http://${host}:3000`;
+    this.logger.debug(`${baseUrl}${path}`);
+
+    try {
+      chainInfo = await this.requestRestGateway<ChainInfo>(baseUrl, path);
+    } catch (e) {
+      this.logger.warn(`アクセスできませんでした: ${baseUrl}${path}`);
+    }
+
+    return chainInfo;
+  }
+
+  /**
+   * NodeInfo取得(トライHTTPs)
    * @param host ホスト名
    * @returns 成功: NodeInfo, 失敗: undefined
    */
-  async trySslNodeInfo(host: string): Promise<NodeInfo> {
+  async tryHttpsNodeInfo(host: string): Promise<NodeInfo> {
     const path = '/node/info';
     const baseUrl = `https://${host}:3001`;
     this.logger.debug(`${baseUrl}${path}`);
@@ -59,6 +105,142 @@ export class RestGateway {
     }
 
     return nodeInfo;
+  }
+
+  /**
+   * NodePeers取得(トライHTTPs)
+   * @param host ホスト名
+   * @returns 成功: NodePeer[], 失敗: undefined
+   */
+  async tryHttpsNodePeers(host: string): Promise<NodePeer[]> {
+    let nodePeers: NodePeer[] = undefined;
+
+    const path = '/node/peers';
+    const baseUrl = `https://${host}:3001`;
+    this.logger.debug(`${baseUrl}${path}`);
+
+    try {
+      nodePeers = await this.requestRestGateway<NodePeer[]>(baseUrl, path);
+    } catch (e) {
+      nodePeers = await this.getNodePeers(host);
+    }
+
+    return nodePeers;
+  }
+
+  /**
+   * NodePeers取得
+   * @param host ホスト名
+   * @returns 成功: NodePeer[], 失敗: undefined
+   */
+  async getNodePeers(host: string): Promise<NodePeer[]> {
+    let nodePeers: NodePeer[] = undefined;
+
+    const path = '/node/peers';
+    const baseUrl = `http://${host}:3000`;
+    this.logger.debug(`${baseUrl}${path}`);
+
+    try {
+      nodePeers = await this.requestRestGateway<NodePeer[]>(baseUrl, path);
+    } catch (e) {
+      this.logger.warn(`アクセスできませんでした: ${baseUrl}${path}`);
+    }
+
+    return nodePeers;
+  }
+
+  /**
+   * NodeUnlockedAccount取得(トライHTTPs)
+   * @param host ホスト名
+   * @returns 成功: NodeUnlockedAccount, 失敗: undefined
+   */
+  async tryHttpsNodeUnlockedAccount(host: string): Promise<NodeUnlockedAccount> {
+    let nodeUnlockedAccount: NodeUnlockedAccount = undefined;
+
+    const path = '/node/unlockedaccount';
+    const baseUrl = `https://${host}:3001`;
+    this.logger.debug(`${baseUrl}${path}`);
+
+    try {
+      nodeUnlockedAccount = await this.requestRestGateway<NodeUnlockedAccount>(baseUrl, path);
+    } catch (e) {
+      nodeUnlockedAccount = await this.getNodeUnlockedAccount(host);
+    }
+
+    return nodeUnlockedAccount;
+  }
+
+  /**
+   * NodeUnlockedAccount取得
+   * @param host ホスト名
+   * @returns 成功: NodeUnlockedAccount, 失敗: undefined
+   */
+  async getNodeUnlockedAccount(host: string): Promise<NodeUnlockedAccount> {
+    let nodeUnlockedAccount: NodeUnlockedAccount = undefined;
+
+    const path = '/node/unlockedaccount';
+    const baseUrl = `http://${host}:3000`;
+    this.logger.debug(`${baseUrl}${path}`);
+
+    try {
+      nodeUnlockedAccount = await this.requestRestGateway<NodeUnlockedAccount>(baseUrl, path);
+    } catch (e) {
+      this.logger.warn(`アクセスできませんでした: ${baseUrl}${path}`);
+    }
+
+    return nodeUnlockedAccount;
+  }
+
+  /**
+   * NetworkProperties取得(トライHTTPs)
+   * @param host ホスト名
+   * @returns 成功: NetworkProperties, 失敗: undefined
+   */
+  async tryHttpsNetworkProperties(host: string): Promise<NetworkProperties> {
+    let networkProperties: NetworkProperties = undefined;
+
+    const path = '/network/properties';
+    const baseUrl = `https://${host}:3001`;
+    this.logger.debug(`${baseUrl}${path}`);
+
+    try {
+      networkProperties = await this.requestRestGateway<NetworkProperties>(baseUrl, path);
+    } catch (e) {
+      networkProperties = await this.getNetworkProperties(host);
+    }
+
+    return networkProperties;
+  }
+
+  /**
+   * NetworkProperties取得
+   * @param host ホスト名
+   * @returns 成功: NetworkProperties, 失敗: undefined
+   */
+  async getNetworkProperties(host: string): Promise<NetworkProperties> {
+    let networkProperties: NetworkProperties = undefined;
+
+    const path = '/network/properties';
+    const baseUrl = `http://${host}:3000`;
+    this.logger.debug(`${baseUrl}${path}`);
+
+    try {
+      networkProperties = await this.requestRestGateway<NetworkProperties>(baseUrl, path);
+    } catch (e) {
+      this.logger.warn(`アクセスできませんでした: ${baseUrl}${path}`);
+    }
+
+    return networkProperties;
+  }
+
+  /**
+   * NetworkProperties死活
+   * @param host ホスト名
+   * @returns 成功: true, 失敗: false
+   */
+  async isAvailableNetworkProperties(host: string): Promise<boolean> {
+    const networkProperties = await this.tryHttpsNetworkProperties(host);
+    return networkProperties !== undefined;
   }
 
   /**

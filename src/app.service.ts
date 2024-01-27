@@ -38,7 +38,7 @@ export class AppService {
       // ノード情報登録
       for (const initNodeHost of initNodeHosts) {
         const restGw = new RestGateway(this.configService.get<number>('connection.timeout'));
-        const nodeInfo = await restGw.trySslNodeInfo(initNodeHost);
+        const nodeInfo = await restGw.tryHttpsNodeInfo(initNodeHost);
         if (nodeInfo !== undefined) {
           nodeInfo.isAvailable = true;
           await this.peersRepository.create(nodeInfo);
