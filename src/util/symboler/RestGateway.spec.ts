@@ -1,9 +1,9 @@
-import { RestGateway } from './RestGateway';
-import { ChainInfo } from './model/ChainInfo';
-import { NetworkProperties } from './model/NetworkProperties';
-import { NodeInfo } from './model/NodeInfo';
-import { NodePeer } from './model/NodePeer';
-import { NodeUnlockedAccount } from './model/NodeUnlockedAccount';
+import { RestGateway } from '@/util/symboler/RestGateway';
+import { ChainInfo } from '@/util/symboler/model/ChainInfo';
+import { NetworkProperties } from '@/util/symboler/model/NetworkProperties';
+import { NodeInfo } from '@/util/symboler/model/NodeInfo';
+import { NodePeer } from '@/util/symboler/model/NodePeer';
+import { NodeUnlockedAccount } from '@/util/symboler/model/NodeUnlockedAccount';
 
 describe('RestGateway', () => {
   let restGateway: RestGateway;

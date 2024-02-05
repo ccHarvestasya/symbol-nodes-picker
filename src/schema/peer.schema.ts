@@ -1,33 +1,9 @@
-import { Prop, Schema, SchemaFactory, raw } from '@nestjs/mongoose';
-import mongoose, { HydratedDocument, SchemaTimestampsConfig } from 'mongoose';
-
-/**
- * ファイナライゼーション
- */
-export class Finalization {
-  /**
-   * ブロック高
-   */
-  height: bigint;
-
-  /**
-   * エポック
-   */
-  epoch: number;
-
-  /**
-   * ポイント
-   */
-  point: number;
-
-  /**
-   * ハッシュ
-   */
-  hash: string;
-}
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { HydratedDocument, SchemaTimestampsConfig } from 'mongoose';
 
 /**
  * ピア
+ * /node/info, /node/peersの情報を格納する。
  */
 @Schema({ timestamps: true })
 export class Peer {
@@ -40,8 +16,14 @@ export class Peer {
   /**
    * 公開鍵
    */
-  @Prop()
+  @Prop({ required: true })
   publicKey: string;
+
+  /**
+   * ノード公開鍵
+   */
+  @Prop()
+  nodePublicKey: string;
 
   /**
    * ポート
@@ -80,41 +62,35 @@ export class Peer {
   networkIdentifier: number;
 
   /**
-   * Peer 死活
-   */
-  @Prop()
-  isAvailable: boolean;
-
-  /**
-   * HTTPS 有無
+   * HTTPs有無
    */
   @Prop()
   isHttpsEnabled: boolean;
-
-  /**
-   * ブロック高
-   */
-  @Prop({ type: mongoose.Schema.Types.BigInt })
-  chainHeight: bigint;
-
-  /**
-   * ファイナライゼーション
-   */
-  @Prop(
-    raw({
-      height: { type: mongoose.Schema.Types.BigInt },
-      epoch: { type: Number },
-      point: { type: Number },
-      hash: { type: String },
-    }),
-  )
-  finalization: Record<string, any>;
 
   /**
    * 証明書有効期限
    */
   @Prop()
   certificateExpirationDate: Date;
+
+  /**
+   * Peer死活
+   */
+  @Prop()
+  isAvailable: boolean;
+
+  /**
+   * チェック日時
+   */
+  @Prop()
+  lastCheck: Date;
+
+  /**
+   * 同期チェック日時
+   * 他ノードの/node/peersに載っているか確認出来た日時
+   */
+  @Prop()
+  lastSyncCheck: Date;
 }
 
 export type PeerDocument = HydratedDocument<Peer, SchemaTimestampsConfig>;

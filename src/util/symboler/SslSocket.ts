@@ -1,12 +1,12 @@
+import { ChainInfo } from '@/util/symboler/model/ChainInfo';
+import { NodeInfo } from '@/util/symboler/model/NodeInfo';
+import { NodePeer } from '@/util/symboler/model/NodePeer';
+import { NodeUnlockedAccount } from '@/util/symboler/model/NodeUnlockedAccount';
 import { Logger } from '@nestjs/common';
 import { X509Certificate } from 'crypto';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import * as tls from 'tls';
-import { ChainInfo } from './model/ChainInfo';
-import { NodeInfo } from './model/NodeInfo';
-import { NodePeer } from './model/NodePeer';
-import { NodeUnlockedAccount } from './model/NodeUnlockedAccount';
 
 /**
  * パケットタイプ
@@ -53,10 +53,13 @@ export class SslSocket {
     let chainInfo: ChainInfo = undefined;
 
     try {
+      this.logger.log(`socket://${host}:${port}/chain/info`);
       const promises: Promise<SocketData>[] = [];
       promises.push(this.getSocketData(host, port, PacketType.CHAIN_STATISTICS));
       promises.push(this.getSocketData(host, port, PacketType.FINALIZATION_STATISTICS));
       const socketDatas = await Promise.all(promises);
+      if (socketDatas[0].data === undefined) return undefined;
+      if (socketDatas[1].data === undefined) return undefined;
       try {
         // 編集
         const chainBufferView = Buffer.from(socketDatas[0].data.buffer);
@@ -73,10 +76,11 @@ export class SslSocket {
         };
       } catch (e) {
         chainInfo = undefined;
+        this.logger.error(`socket://${host}:${port}`);
         this.logger.error(e);
       }
     } catch (e) {
-      this.logger.warn(`アクセスできませんでした: ${host}:${port}`);
+      this.logger.error(`socket://${host}:${port}:${e.message}`);
     }
 
     return chainInfo;
@@ -92,7 +96,9 @@ export class SslSocket {
     let nodeInfo: NodeInfo = undefined;
 
     try {
+      this.logger.log(`socket://${host}:${port}/node/info`);
       const socketData = await this.getSocketData(host, port, PacketType.NODE_DISCOVERY_PULL_PING);
+      if (socketData.data === undefined) return undefined;
       try {
         // 編集
         nodeInfo = new NodeInfo();
@@ -127,7 +133,7 @@ export class SslSocket {
         this.logger.error(e);
       }
     } catch (e) {
-      this.logger.warn(`アクセスできませんでした: ${host}:${port}`);
+      this.logger.error(`socket://${host}:${port}:${e.message}`);
     }
 
     return nodeInfo;
@@ -144,7 +150,9 @@ export class SslSocket {
     let nodePeer: NodePeer = undefined;
 
     try {
+      this.logger.log(`socket://${host}:${port}/node/peers`);
       const socketData = await this.getSocketData(host, port, PacketType.NODE_DISCOVERY_PULL_PEERS);
+      if (socketData.data === undefined) return undefined;
       try {
         let index = 0;
         const nodeBufferView = Buffer.from(socketData.data.buffer);
@@ -181,11 +189,12 @@ export class SslSocket {
         }
       } catch (e) {
         nodePeers = undefined;
+        this.logger.error(`socket://${host}:${port}`);
         this.logger.error(e);
       }
     } catch (e) {
       nodePeers = undefined;
-      this.logger.warn(`アクセスできませんでした: ${host}:${port}`);
+      this.logger.error(`socket://${host}:${port}:${e.message}`);
     }
 
     return nodePeers;
@@ -201,7 +210,9 @@ export class SslSocket {
     let nodeUnlockedAccount: NodeUnlockedAccount = undefined;
 
     try {
+      this.logger.log(`socket://${host}:${port}/node/unlockedAccount`);
       const socketData = await this.getSocketData(host, port, PacketType.UNLOCKED_ACCOUNTS);
+      if (socketData.data === undefined) return undefined;
       try {
         let index = 0;
         const nodeBufferView = Buffer.from(socketData.data.buffer);
@@ -215,11 +226,12 @@ export class SslSocket {
         }
       } catch (e) {
         nodeUnlockedAccount = undefined;
+        this.logger.error(`socket://${host}:${port}`);
         this.logger.error(e);
       }
     } catch (e) {
       nodeUnlockedAccount = undefined;
-      this.logger.warn(`アクセスできませんでした: ${host}:${port}`);
+      this.logger.error(`socket://${host}:${port}:${e.message}`);
     }
 
     return nodeUnlockedAccount;
@@ -318,6 +330,7 @@ export class SslSocket {
         });
       });
 
+      // タイムアウト時
       socket.on('timeout', () => {
         // this.logger.verbose('timeout');
         socketData.message = 'timeout';

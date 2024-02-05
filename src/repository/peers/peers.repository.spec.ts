@@ -1,27 +1,24 @@
+import { PeersRepository } from '@/repository/peers/peers.repository';
+import { PeerDocument } from '@/schema/peer.schema';
 import { getModelToken } from '@nestjs/mongoose';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Model } from 'mongoose';
-import { PeerDocument } from '../../schema/peer.schema';
-import { PeersRepository } from './peers.repository';
 
 const mockPeer = {
   host: 'vmi831828.contaboserver.net',
   publicKey: '24A1C604DAAB6D23CE19BD00FF272A87382B019ADDEA99193F15E469B5646080',
+  nodePublicKey: '2A2F4374C68D2C516E6FE9FFB42FD151DB8968556D06C6CF1D1150A38FF43670',
   port: 7900,
   friendlyName: 'MAMESHIBA',
   version: 16777990,
   networkGenerationHashSeed: '49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4',
   roles: 3,
   networkIdentifier: 152,
-  isAvailable: true,
   isHttpsEnabled: true,
-  chainHeight: 321654123456987n,
-  finalization: {
-    height: 3216541238421n,
-    epoch: 13,
-    point: 54,
-    hash: '339E0AB259366BEFE28AE7017A02FA32A6D88736066085C942585B820516EFD2',
-  },
+  certificateExpirationDate: new Date('2025-02-02T11:12:24.000Z'),
+  isAvailable: true,
+  lastCheck: new Date('2024-01-29T04:52:19.499Z'),
+  lastSyncCheck: new Date('2024-01-29T04:52:27.041Z'),
 };
 
 describe('PeersRepository', () => {
@@ -102,6 +99,7 @@ describe('PeersRepository', () => {
       Promise.resolve({
         host: 'vmi831828.contaboserver.net',
         publicKey: '24A1C604DAAB6D23CE19BD00FF272A87382B019ADDEA99193F15E469B5646080',
+        nodePublicKey: '2A2F4374C68D2C516E6FE9FFB42FD151DB8968556D06C6CF1D1150A38FF43670',
         port: 7900,
         friendlyName: 'MAMESHIBA',
         version: 16777990,
@@ -109,35 +107,28 @@ describe('PeersRepository', () => {
           '49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4',
         roles: 3,
         networkIdentifier: 152,
-        isAvailable: true,
         isHttpsEnabled: true,
-        chainHeight: 321654123456987n,
-        finalization: {
-          height: 3216541238421n,
-          epoch: 13,
-          point: 54,
-          hash: '339E0AB259366BEFE28AE7017A02FA32A6D88736066085C942585B820516EFD2',
-        },
+        certificateExpirationDate: new Date('2025-02-02T11:12:24.000Z'),
+        isAvailable: true,
+        lastCheck: new Date('2024-01-29T04:52:19.499Z'),
+        lastSyncCheck: new Date('2024-01-29T04:52:27.041Z'),
       } as any),
     );
     const newCat = await service.create({
       host: 'vmi831828.contaboserver.net',
       publicKey: '24A1C604DAAB6D23CE19BD00FF272A87382B019ADDEA99193F15E469B5646080',
+      nodePublicKey: '2A2F4374C68D2C516E6FE9FFB42FD151DB8968556D06C6CF1D1150A38FF43670',
       port: 7900,
       friendlyName: 'MAMESHIBA',
       version: 16777990,
       networkGenerationHashSeed: '49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4',
       roles: 3,
       networkIdentifier: 152,
-      isAvailable: true,
       isHttpsEnabled: true,
-      chainHeight: 321654123456987n,
-      finalization: {
-        height: 3216541238421n,
-        epoch: 13,
-        point: 54,
-        hash: '339E0AB259366BEFE28AE7017A02FA32A6D88736066085C942585B820516EFD2',
-      },
+      certificateExpirationDate: new Date('2025-02-02T11:12:24.000Z'),
+      isAvailable: true,
+      lastCheck: new Date('2024-01-29T04:52:19.499Z'),
+      lastSyncCheck: new Date('2024-01-29T04:52:27.041Z'),
     });
     expect(newCat).toEqual(mockPeer);
   });

@@ -1,7 +1,7 @@
+import { PeersRepository } from '@/repository/peers/peers.repository';
+import { Peer, PeerSchema } from '@/schema/peer.schema';
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { Peer, PeerSchema } from '../../schema/peer.schema';
-import { PeersRepository } from './peers.repository';
 
 @Module({
   imports: [MongooseModule.forFeature([{ name: Peer.name, schema: PeerSchema }])],
@@ -9,4 +9,4 @@ import { PeersRepository } from './peers.repository';
   providers: [PeersRepository],
   exports: [PeersRepository],
 })
-export class PeersModule {}
+export class PeersRepositoryModule {}

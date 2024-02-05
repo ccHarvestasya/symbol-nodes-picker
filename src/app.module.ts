@@ -1,7 +1,9 @@
 import { AppController } from '@/app.controller';
 import { AppService } from '@/app.service';
 import configuration from '@/config/configuration';
-import { PeersModule } from '@/repository/peers/peers.module';
+import { PeersModule } from '@/modules/peers.module';
+import { PeersRepositoryModule } from '@/repository/peers/peers.repository.module';
+import { PeersService } from '@/services/peers.service';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
@@ -23,9 +25,10 @@ import { ScheduleModule } from '@nestjs/schedule';
         uri: config.get<string>('db.mongo.uri'),
       }),
     }),
+    PeersRepositoryModule,
     PeersModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, PeersService],
 })
 export class AppModule {}

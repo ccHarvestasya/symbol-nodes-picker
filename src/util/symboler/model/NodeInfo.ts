@@ -1,4 +1,4 @@
-import { NodePeer } from './NodePeer';
+import { NodePeer } from '@/util/symboler/model/NodePeer';
 
 export class NodeInfo extends NodePeer {
   /**
@@ -19,5 +19,5 @@ export class NodeInfo extends NodePeer {
   /**
    * 証明書有効期限
    */
-  certificateExpirationDate: Date;
+  certificateExpirationDate?: Date;
 }

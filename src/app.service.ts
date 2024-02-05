@@ -1,3 +1,4 @@
+import { PeerCreateDto } from '@/repository/peers/dto/peerCreateDto';
 import { PeersRepository } from '@/repository/peers/peers.repository';
 import { RestGateway } from '@/util/symboler/RestGateway';
 import { SslSocket } from '@/util/symboler/SslSocket';
@@ -40,8 +41,22 @@ export class AppService {
         const restGw = new RestGateway(this.configService.get<number>('connection.timeout'));
         const nodeInfo = await restGw.tryHttpsNodeInfo(initNodeHost);
         if (nodeInfo !== undefined) {
-          nodeInfo.isAvailable = true;
-          await this.peersRepository.create(nodeInfo);
+          const peerCreateDto = new PeerCreateDto();
+          peerCreateDto.host = nodeInfo.host;
+          peerCreateDto.publicKey = nodeInfo.publicKey;
+          peerCreateDto.nodePublicKey = nodeInfo.nodePublicKey;
+          peerCreateDto.port = nodeInfo.port;
+          peerCreateDto.friendlyName = nodeInfo.friendlyName;
+          peerCreateDto.version = nodeInfo.version;
+          peerCreateDto.networkGenerationHashSeed = nodeInfo.networkGenerationHashSeed;
+          peerCreateDto.roles = nodeInfo.roles;
+          peerCreateDto.networkIdentifier = nodeInfo.networkIdentifier;
+          peerCreateDto.isHttpsEnabled = nodeInfo.isHttpsEnabled;
+          peerCreateDto.certificateExpirationDate = nodeInfo.certificateExpirationDate;
+          peerCreateDto.isAvailable = true;
+          peerCreateDto.lastCheck = new Date();
+          peerCreateDto.lastSyncCheck = new Date();
+          await this.peersRepository.create(peerCreateDto);
         }
       }
     }

@@ -7,5 +7,5 @@
     "source.organizeImports": "explicit"
   },
   "files.eol": "\n",
-  "typescript.preferences.importModuleSpecifier": "relative"
+  "typescript.preferences.importModuleSpecifier": "non-relative"
 }

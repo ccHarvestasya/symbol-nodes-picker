@@ -1,10 +1,10 @@
+import { ChainInfo } from '@/util/symboler/model/ChainInfo';
+import { NetworkProperties } from '@/util/symboler/model/NetworkProperties';
+import { NodeInfo } from '@/util/symboler/model/NodeInfo';
+import { NodePeer } from '@/util/symboler/model/NodePeer';
+import { NodeUnlockedAccount } from '@/util/symboler/model/NodeUnlockedAccount';
 import { Logger } from '@nestjs/common';
 import axios, { AxiosResponse } from 'axios';
-import { ChainInfo } from './model/ChainInfo';
-import { NetworkProperties } from './model/NetworkProperties';
-import { NodeInfo } from './model/NodeInfo';
-import { NodePeer } from './model/NodePeer';
-import { NodeUnlockedAccount } from './model/NodeUnlockedAccount';
 
 /**
  * Rest Gateway から値を取得する
@@ -31,7 +31,7 @@ export class RestGateway {
 
     const path = '/chain/info';
     const baseUrl = `https://${host}:3001`;
-    this.logger.debug(`${baseUrl}${path}`);
+    this.logger.log(`${baseUrl}${path}`);
 
     try {
       chainInfo = await this.requestRestGateway<ChainInfo>(baseUrl, path);
@@ -52,12 +52,12 @@ export class RestGateway {
 
     const path = '/chain/info';
     const baseUrl = `http://${host}:3000`;
-    this.logger.debug(`${baseUrl}${path}`);
+    this.logger.log(`${baseUrl}${path}`);
 
     try {
       chainInfo = await this.requestRestGateway<ChainInfo>(baseUrl, path);
     } catch (e) {
-      this.logger.warn(`アクセスできませんでした: ${baseUrl}${path}`);
+      this.logger.error(`${baseUrl}${path}: ${e}`);
     }
 
     return chainInfo;
@@ -71,7 +71,7 @@ export class RestGateway {
   async tryHttpsNodeInfo(host: string): Promise<NodeInfo> {
     const path = '/node/info';
     const baseUrl = `https://${host}:3001`;
-    this.logger.debug(`${baseUrl}${path}`);
+    this.logger.log(`${baseUrl}${path}`);
 
     let nodeInfo = undefined;
     try {
@@ -93,7 +93,7 @@ export class RestGateway {
   async getNodeInfo(host: string): Promise<NodeInfo> {
     const path = '/node/info';
     const baseUrl = `http://${host}:3000`;
-    this.logger.debug(`${baseUrl}${path}`);
+    this.logger.log(`${baseUrl}${path}`);
 
     let nodeInfo = undefined;
     try {
@@ -101,7 +101,7 @@ export class RestGateway {
       nodeInfo.isHttpsEnabled = false;
       nodeInfo.host = host; // たまに空の奴がいる
     } catch (e) {
-      this.logger.warn(`アクセスできませんでした: ${baseUrl}${path}`);
+      this.logger.error(`${baseUrl}${path}: ${e}`);
     }
 
     return nodeInfo;
@@ -117,7 +117,7 @@ export class RestGateway {
 
     const path = '/node/peers';
     const baseUrl = `https://${host}:3001`;
-    this.logger.debug(`${baseUrl}${path}`);
+    this.logger.log(`${baseUrl}${path}`);
 
     try {
       nodePeers = await this.requestRestGateway<NodePeer[]>(baseUrl, path);
@@ -138,12 +138,12 @@ export class RestGateway {
 
     const path = '/node/peers';
     const baseUrl = `http://${host}:3000`;
-    this.logger.debug(`${baseUrl}${path}`);
+    this.logger.log(`${baseUrl}${path}`);
 
     try {
       nodePeers = await this.requestRestGateway<NodePeer[]>(baseUrl, path);
     } catch (e) {
-      this.logger.warn(`アクセスできませんでした: ${baseUrl}${path}`);
+      this.logger.error(`${baseUrl}${path}: ${e}`);
     }
 
     return nodePeers;
@@ -159,7 +159,7 @@ export class RestGateway {
 
     const path = '/node/unlockedaccount';
     const baseUrl = `https://${host}:3001`;
-    this.logger.debug(`${baseUrl}${path}`);
+    this.logger.log(`${baseUrl}${path}`);
 
     try {
       nodeUnlockedAccount = await this.requestRestGateway<NodeUnlockedAccount>(baseUrl, path);
@@ -180,12 +180,12 @@ export class RestGateway {
 
     const path = '/node/unlockedaccount';
     const baseUrl = `http://${host}:3000`;
-    this.logger.debug(`${baseUrl}${path}`);
+    this.logger.log(`${baseUrl}${path}`);
 
     try {
       nodeUnlockedAccount = await this.requestRestGateway<NodeUnlockedAccount>(baseUrl, path);
     } catch (e) {
-      this.logger.warn(`アクセスできませんでした: ${baseUrl}${path}`);
+      this.logger.error(`${baseUrl}${path}: ${e}`);
     }
 
     return nodeUnlockedAccount;
@@ -201,7 +201,7 @@ export class RestGateway {
 
     const path = '/network/properties';
     const baseUrl = `https://${host}:3001`;
-    this.logger.debug(`${baseUrl}${path}`);
+    this.logger.log(`${baseUrl}${path}`);
 
     try {
       networkProperties = await this.requestRestGateway<NetworkProperties>(baseUrl, path);
@@ -222,12 +222,12 @@ export class RestGateway {
 
     const path = '/network/properties';
     const baseUrl = `http://${host}:3000`;
-    this.logger.debug(`${baseUrl}${path}`);
+    this.logger.log(`${baseUrl}${path}`);
 
     try {
       networkProperties = await this.requestRestGateway<NetworkProperties>(baseUrl, path);
     } catch (e) {
-      this.logger.warn(`アクセスできませんでした: ${baseUrl}${path}`);
+      this.logger.error(`${baseUrl}${path}: ${e}`);
     }
 
     return networkProperties;
@@ -245,14 +245,14 @@ export class RestGateway {
 
   /**
    * Restゲートウェイから値を取得する
-   * @param baseURL ベースURL
+   * @param baseUrl ベースURL
    * @param path パス
    * @returns Restゲートウェイ応答結果
    */
-  private async requestRestGateway<T>(baseURL: string, path: string): Promise<T> {
+  private async requestRestGateway<T>(baseUrl: string, path: string): Promise<T> {
     try {
       const restGwAxios = axios.create({
-        baseURL: baseURL,
+        baseURL: baseUrl,
         timeout: this.timeout,
         headers: { 'Content-Type': 'application/json' },
       });
@@ -261,7 +261,7 @@ export class RestGateway {
       });
       return restGwResponseData;
     } catch (e) {
-      this.logger.warn(e);
+      this.logger.error(`${baseUrl}${path}: ${e}`);
       throw e;
     }
   }

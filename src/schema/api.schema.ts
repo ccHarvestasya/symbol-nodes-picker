@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory, raw } from '@nestjs/mongoose';
-import mongoose, { HydratedDocument, SchemaTimestampsConfig } from 'mongoose';
+import { HydratedDocument, SchemaTimestampsConfig } from 'mongoose';
 
 /**
  * Api
@@ -19,73 +19,6 @@ export class Api {
   publicKey: string;
 
   /**
-   * ポート
-   */
-  @Prop()
-  port: number;
-
-  /**
-   * フレンドリー名
-   */
-  @Prop()
-  friendlyName: string;
-
-  /**
-   * バージョン
-   */
-  @Prop()
-  version: number;
-
-  /**
-   * ジェネレーションハッシュシード
-   */
-  @Prop()
-  networkGenerationHashSeed: string;
-
-  /**
-   * ロール
-   */
-  @Prop()
-  roles: number;
-
-  /**
-   * ネットワークID
-   */
-  @Prop()
-  networkIdentifier: number;
-
-  /**
-   * Peer 死活
-   */
-  @Prop()
-  isAvailable: boolean;
-
-  /**
-   * HTTPS 有無
-   */
-  @Prop()
-  isHttpsEnabled: boolean;
-
-  /**
-   * ブロック高
-   */
-  @Prop({ type: mongoose.Schema.Types.BigInt })
-  chainHeight: bigint;
-
-  /**
-   * ファイナライゼーション
-   */
-  @Prop(
-    raw({
-      height: { type: mongoose.Schema.Types.BigInt },
-      epoch: { type: Number },
-      point: { type: Number },
-      hash: { type: String },
-    }),
-  )
-  finalization: Record<string, any>;
-
-  /**
    * WebSocket
    */
   @Prop(
@@ -95,6 +28,11 @@ export class Api {
     }),
   )
   websocket: Record<string, any>;
+
+  /**
+   * ネットワークプロパティ死活
+   */
+  isNetworkPropertiesAvailable: boolean;
 }
 
 export type ApiDocument = HydratedDocument<Api, SchemaTimestampsConfig>;

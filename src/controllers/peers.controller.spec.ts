@@ -1,15 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { Peer2peerController } from './peer2peer.controller';
+import { PeersController } from './peers.controller';
 
-describe('Peer2peerController', () => {
-  let controller: Peer2peerController;
+describe('PeersController', () => {
+  let controller: PeersController;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      controllers: [Peer2peerController],
+      controllers: [PeersController],
     }).compile();
 
-    controller = module.get<Peer2peerController>(Peer2peerController);
+    controller = module.get<PeersController>(PeersController);
   });
 
   it('should be defined', () => {

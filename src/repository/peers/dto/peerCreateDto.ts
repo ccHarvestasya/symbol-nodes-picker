@@ -1,19 +1,72 @@
 export class PeerCreateDto {
+  /**
+   * ホスト
+   */
   host: string;
+
+  /**
+   * 公開鍵
+   */
   publicKey: string;
+
+  /**
+   * ノード公開鍵
+   */
+  nodePublicKey: string;
+
+  /**
+   * ポート
+   */
   port: number;
+
+  /**
+   * フレンドリー名
+   */
   friendlyName: string;
+
+  /**
+   * バージョン
+   */
   version: number;
+
+  /**
+   * ジェネレーションハッシュシード
+   */
   networkGenerationHashSeed: string;
+
+  /**
+   * ロール
+   */
   roles: number;
+
+  /**
+   * ネットワークID
+   */
   networkIdentifier: number;
-  isAvailable: boolean;
+
+  /**
+   * HTTPs有無
+   */
   isHttpsEnabled: boolean;
-  chainHeight?: bigint;
-  finalization?: {
-    height: bigint;
-    epoch: number;
-    point: number;
-    hash: string;
-  };
+
+  /**
+   * 証明書有効期限
+   */
+  certificateExpirationDate: Date;
+
+  /**
+   * Peer死活
+   */
+  isAvailable: boolean;
+
+  /**
+   * チェック日時
+   */
+  lastCheck: Date;
+
+  /**
+   * 同期チェック日時
+   * 他ノードの/node/peersに載っているか確認出来た日時
+   */
+  lastSyncCheck: Date;
 }

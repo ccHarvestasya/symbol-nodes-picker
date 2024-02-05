@@ -1,5 +1,5 @@
+import { SslSocket } from '@/util/symboler/SslSocket';
 import { X509Certificate } from 'crypto';
-import { SslSocket } from './SslSocket';
 
 describe('SslScoket', () => {
   let sslScoket: SslSocket;
