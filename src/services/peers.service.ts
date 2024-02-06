@@ -70,8 +70,8 @@ export class PeersService {
         const findDto = new PeersFindDto();
         findDto.host = nodePeer.host;
         findDto.publicKey = nodePeer.publicKey;
-        const peer = await this.peersRepository.findOne(findDto);
-        if (!peer) {
+        const peerDoc = await this.peersRepository.findOne(findDto);
+        if (!peerDoc) {
           // 未登録分をリスト化
           unregistrationPeers.push(nodePeer);
         } else {
