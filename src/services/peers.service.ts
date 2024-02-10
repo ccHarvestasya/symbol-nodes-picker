@@ -95,6 +95,7 @@ export class PeersService {
         // 既存の場合は同期チェック日時を更新する
         const keyDto = new PeerKeyDto(registrationPeer.host, registrationPeer.publicKey);
         const updateDto = new PeerUpdateDto();
+        updateDto.lastCheck = new Date();
         updateDto.lastSyncCheck = new Date();
         await this.peersRepository.updateOne(keyDto, updateDto);
       }

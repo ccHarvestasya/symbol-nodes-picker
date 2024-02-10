@@ -8,5 +8,5 @@ connection:
     - 'mikun-testnet.tk'
     - '001-sai-dual.symboltest.net'
   timeout: 5000
-  request-count: 150
+  request-count: 100
   request-chunk: 10
