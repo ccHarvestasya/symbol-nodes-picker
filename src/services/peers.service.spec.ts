@@ -1,6 +1,8 @@
 import configuration from '@/config/configuration';
 import { PeersRepository } from '@/repository/peers/peers.repository';
+import { SettingsRepository } from '@/repository/settings/settings.repository';
 import { Peer, PeerDocument } from '@/schema/peer.schema';
+import { Setting } from '@/schema/setting.schema';
 import { PeersService } from '@/services/peers.service';
 import { RestGateway } from '@/util/symboler/RestGateway';
 import { SslSocket } from '@/util/symboler/SslSocket';
@@ -239,6 +241,18 @@ describe('PeersService', () => {
       providers: [
         ConfigService,
         PeersService,
+        SettingsRepository,
+        {
+          provide: getModelToken(Setting.name),
+          useValue: {
+            constructor: jest.fn(),
+            new: jest.fn(),
+            findOne: jest.fn(),
+            updateOne: jest.fn(),
+            create: jest.fn(),
+            exec: jest.fn(),
+          },
+        },
         PeersRepository,
         {
           provide: getModelToken(Peer.name),
@@ -307,7 +321,10 @@ describe('PeersService', () => {
         port: 7900,
       },
     ];
-    await service.registerNewPeer(nodeKeys);
+    await service.registerNewPeer(
+      '49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4',
+      nodeKeys,
+    );
 
     /** 検証 **/
     expect(updateOneJest.mock.calls.length).toEqual(1);
@@ -554,7 +571,10 @@ describe('PeersService', () => {
         port: 7900,
       },
     ];
-    const nodePeersMap = await service.getNodePeers(nodeKeys);
+    const nodePeersMap = await service.getNodePeers(
+      '49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4',
+      nodeKeys,
+    );
 
     // 検証
     const socket = new Map<string, NodePeer[]>();

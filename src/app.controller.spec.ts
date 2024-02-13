@@ -2,6 +2,7 @@ import { AppController } from '@/app.controller';
 import { AppService } from '@/app.service';
 import configuration from '@/config/configuration';
 import { PeersRepositoryModule } from '@/repository/peers/peers.repository.module';
+import { SettingsRepositoryModule } from '@/repository/settings/settings.repository.module';
 import { PeersService } from '@/services/peers.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
@@ -13,6 +14,7 @@ describe('AppController', () => {
   beforeEach(async () => {
     const app: TestingModule = await Test.createTestingModule({
       imports: [
+        SettingsRepositoryModule,
         PeersRepositoryModule,
         MongooseModule.forRootAsync({
           imports: [

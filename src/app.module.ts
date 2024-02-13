@@ -3,6 +3,7 @@ import { AppService } from '@/app.service';
 import configuration from '@/config/configuration';
 import { PeersModule } from '@/modules/peers.module';
 import { PeersRepositoryModule } from '@/repository/peers/peers.repository.module';
+import { SettingsRepositoryModule } from '@/repository/settings/settings.repository.module';
 import { PeersService } from '@/services/peers.service';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -25,6 +26,7 @@ import { ScheduleModule } from '@nestjs/schedule';
         uri: config.get<string>('db.mongo.uri'),
       }),
     }),
+    SettingsRepositoryModule,
     PeersRepositoryModule,
     PeersModule,
   ],

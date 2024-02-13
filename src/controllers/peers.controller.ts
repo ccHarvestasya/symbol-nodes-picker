@@ -31,7 +31,10 @@ export class PeersController {
       nodeKeys.push(nodeKey);
     }
 
-    this.peersService.registerNewPeer(nodeKeys);
+    // ジェネレーションハッシュシード
+    const nghs = await this.peersService.getNetworkGenerationHashSeed();
+    // 新しいPeerの登録
+    this.peersService.registerNewPeer(nghs, nodeKeys);
 
     this.logger.verbose(' end  - ' + methodName);
   }

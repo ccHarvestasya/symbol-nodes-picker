@@ -3,6 +3,8 @@ import { PeerKeyDto } from '@/repository/peers/dto/peerKeyDto';
 import { PeerUpdateDto } from '@/repository/peers/dto/peerUpdateDto';
 import { PeersFindDto } from '@/repository/peers/dto/peersFindDto';
 import { PeersRepository } from '@/repository/peers/peers.repository';
+import { SettingKeyDto } from '@/repository/settings/dto/settingKeyDto';
+import { SettingsRepository } from '@/repository/settings/settings.repository';
 import { PeerDocument } from '@/schema/peer.schema';
 import { RestGateway } from '@/util/symboler/RestGateway';
 import { SslSocket } from '@/util/symboler/SslSocket';
@@ -34,19 +36,21 @@ export class PeersService {
    */
   constructor(
     private readonly configService: ConfigService,
+    private readonly settingsRepository: SettingsRepository,
     private readonly peersRepository: PeersRepository,
   ) {}
 
   /**
    * 新しいPeerの登録
+   * @param networkGenerationHashSeed ネットワークジェネレーションハッシュ
    * @param nodeKeys ノードキー配列
    */
-  async registerNewPeer(nodeKeys: NodeKey[]): Promise<void> {
+  async registerNewPeer(networkGenerationHashSeed: string, nodeKeys: NodeKey[]): Promise<void> {
     const methodName = 'registerNewPeer';
     this.logger.verbose('start - ' + methodName);
 
     // 取得したPeerのPeersを取得
-    const nodePeerMaps = await this.getNodePeers(nodeKeys);
+    const nodePeerMaps = await this.getNodePeers(networkGenerationHashSeed, nodeKeys);
 
     // 登録/未登録ピアリスト作成
     for (const processList of nodeKeys) {
@@ -171,6 +175,21 @@ export class PeersService {
   }
 
   /**
+   * ジェネレーションハッシュシード取得
+   * @returns ジェネレーションハッシュシード
+   */
+  async getNetworkGenerationHashSeed(): Promise<string> {
+    const methodName = 'getNetworkGenerationHashSeed';
+    this.logger.verbose('start - ' + methodName);
+
+    const keyDto = new SettingKeyDto('networkGenerationHashSeed');
+    const settingDoc = await this.settingsRepository.findOne(keyDto);
+
+    this.logger.verbose(' end  - ' + methodName);
+    return settingDoc.value;
+  }
+
+  /**
    * NodeInfo取得
    * ソケットとHTTPからNodeInfoを取得する
    * @param nodeKeys ノードキー配列
@@ -197,13 +216,25 @@ export class PeersService {
     const socketPromises: Promise<void>[] = [];
     const scoketNodeInfoMap = new Map<string, NodeInfo>();
     for (let i = 0; i < chunk; i++) {
-      socketPromises.push(this.getSocketNodeInfoParallel(socketProcessLists, scoketNodeInfoMap));
+      socketPromises.push(
+        this.getSocketNodeInfoParallel(
+          '49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4',
+          socketProcessLists,
+          scoketNodeInfoMap,
+        ),
+      );
     }
     // HTTP通信
     const restGwPromises: Promise<void>[] = [];
     const restGwNodeInfoMap = new Map<string, NodeInfo>();
     for (let i = 0; i < chunk; i++) {
-      restGwPromises.push(this.getRestGwNodeInfoParallel(restGwProcessLists, restGwNodeInfoMap));
+      restGwPromises.push(
+        this.getRestGwNodeInfoParallel(
+          '49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4',
+          restGwProcessLists,
+          restGwNodeInfoMap,
+        ),
+      );
     }
     // 並列処理
     await Promise.all([await Promise.all(socketPromises), await Promise.all(restGwPromises)]);
@@ -215,10 +246,12 @@ export class PeersService {
   /**
    * NodePeers取得
    * ソケットとHTTPからNodePeersを取得する
+   * @param networkGenerationHashSeed ネットワークジェネレーションハッシュ
    * @param nodeKeys ノードキー配列
    * @returns ソケットとHTTPから取得したNodePeers
    */
   async getNodePeers(
+    networkGenerationHashSeed: string,
     nodeKeys: NodeKey[],
   ): Promise<{ socket: Map<string, NodePeer[]>; restGw: Map<string, NodePeer[]> }> {
     const methodName = 'getNodePeers';
@@ -239,13 +272,25 @@ export class PeersService {
     const socketPromises: Promise<void>[] = [];
     const scoketNodePeersMap = new Map<string, NodePeer[]>();
     for (let i = 0; i < chunk; i++) {
-      socketPromises.push(this.getSoketNodePeersParallel(socketNodeInfos, scoketNodePeersMap));
+      socketPromises.push(
+        this.getSoketNodePeersParallel(
+          networkGenerationHashSeed,
+          socketNodeInfos,
+          scoketNodePeersMap,
+        ),
+      );
     }
     // HTTP通信
     const restGwPromises: Promise<void>[] = [];
     const restGwNodePeersMap = new Map<string, NodePeer[]>();
     for (let i = 0; i < chunk; i++) {
-      restGwPromises.push(this.getRestGwNodePeersParallel(restGwNodeInfos, restGwNodePeersMap));
+      restGwPromises.push(
+        this.getRestGwNodePeersParallel(
+          networkGenerationHashSeed,
+          restGwNodeInfos,
+          restGwNodePeersMap,
+        ),
+      );
     }
     // 並列処理
     await Promise.all([await Promise.all(socketPromises), await Promise.all(restGwPromises)]);
@@ -256,10 +301,15 @@ export class PeersService {
 
   /**
    * ソケット通信でNodeInfo取得（並列処理）
+   * @param networkGenerationHashSeed ネットワークジェネレーションハッシュ
    * @param nodeKeys ノードキー配列
    * @param nodeInfoMap NodeInfoマップ
    */
-  private async getSocketNodeInfoParallel(nodeKeys: NodeKey[], nodeInfoMap: Map<string, NodeInfo>) {
+  private async getSocketNodeInfoParallel(
+    networkGenerationHashSeed: string,
+    nodeKeys: NodeKey[],
+    nodeInfoMap: Map<string, NodeInfo>,
+  ) {
     let processList: NodeKey;
     while ((processList = nodeKeys.shift()) !== undefined) {
       // ピア問い合わせ
@@ -269,18 +319,25 @@ export class PeersService {
       const timeout = this.configService.get<number>('connection.timeout');
       const sslScoket = new SslSocket(timeout);
       const nodeInfo = await sslScoket.getNodeInfo(host, port);
-      // マップにセット
-      const mapKey = [host, publicKey]; // IPのみはhost入ってないパターンがある
-      nodeInfoMap.set(mapKey.toString(), nodeInfo);
+      if (nodeInfo && nodeInfo.networkGenerationHashSeed === networkGenerationHashSeed) {
+        // マップにセット
+        const mapKey = [host, publicKey]; // IPのみはhost入ってないパターンがある
+        nodeInfoMap.set(mapKey.toString(), nodeInfo);
+      }
     }
   }
 
   /**
    * HTTP通信でNodeInfo取得（並列処理）
+   * @param networkGenerationHashSeed ネットワークジェネレーションハッシュ
    * @param nodeKeys ノードキー配列
    * @param nodeInfoMap NodeInfoマップ
    */
-  private async getRestGwNodeInfoParallel(nodeKeys: NodeKey[], nodeInfoMap: Map<string, NodeInfo>) {
+  private async getRestGwNodeInfoParallel(
+    networkGenerationHashSeed: string,
+    nodeKeys: NodeKey[],
+    nodeInfoMap: Map<string, NodeInfo>,
+  ) {
     let processList: NodeKey;
     while ((processList = nodeKeys.shift()) !== undefined) {
       // ピア問い合わせ
@@ -289,18 +346,22 @@ export class PeersService {
       const timeout = this.configService.get<number>('connection.timeout');
       const restGateway = new RestGateway(timeout);
       const nodeInfo = await restGateway.tryHttpsNodeInfo(host);
-      // マップにセット
-      const mapKey = [host, publicKey]; // IPのみはhost入ってないパターンがある
-      nodeInfoMap.set(mapKey.toString(), nodeInfo);
+      if (nodeInfo && nodeInfo.networkGenerationHashSeed === networkGenerationHashSeed) {
+        // マップにセット
+        const mapKey = [host, publicKey]; // IPのみはhost入ってないパターンがある
+        nodeInfoMap.set(mapKey.toString(), nodeInfo);
+      }
     }
   }
 
   /**
    * ソケット通信でNodePeers取得（並列処理）
+   * @param networkGenerationHashSeed ネットワークジェネレーションハッシュ
    * @param nodeKeys ノードキー配列
    * @param nodePeersMap NodePeersマップ
    */
   private async getSoketNodePeersParallel(
+    networkGenerationHashSeed: string,
     nodeKeys: NodeKey[],
     nodePeersMap: Map<string, NodePeer[]>,
   ) {
@@ -313,18 +374,25 @@ export class PeersService {
       const timeout = this.configService.get<number>('connection.timeout');
       const sslScoket = new SslSocket(timeout);
       const nodePeers = await sslScoket.getNodePeers(host, port);
-      // マップにセット
-      const mapKey = [host, publicKey]; // IPのみはhost入ってないパターンがある
-      nodePeersMap.set(mapKey.toString(), nodePeers);
+      if (nodePeers) {
+        // マップにセット
+        const mapKey = [host, publicKey]; // IPのみはhost入ってないパターンがある
+        nodePeersMap.set(
+          mapKey.toString(),
+          nodePeers.filter((item) => item.networkGenerationHashSeed === networkGenerationHashSeed),
+        );
+      }
     }
   }
 
   /**
    * HTTP通信でNodePeers取得（並列処理）
+   * @param networkGenerationHashSeed ネットワークジェネレーションハッシュ
    * @param nodeKeys ノードキー配列
    * @param nodePeersMap NodePeersマップ
    */
   private async getRestGwNodePeersParallel(
+    networkGenerationHashSeed: string,
     nodeKeys: NodeKey[],
     nodePeersMap: Map<string, NodePeer[]>,
   ) {
@@ -336,9 +404,14 @@ export class PeersService {
       const timeout = this.configService.get<number>('connection.timeout');
       const restGateway = new RestGateway(timeout);
       const nodePeers = await restGateway.tryHttpsNodePeers(host);
-      // マップにセット
-      const mapKey = [host, publicKey]; // IPのみはhost入ってないパターンがある
-      nodePeersMap.set(mapKey.toString(), nodePeers);
+      if (nodePeers) {
+        // マップにセット
+        const mapKey = [host, publicKey]; // IPのみはhost入ってないパターンがある
+        nodePeersMap.set(
+          mapKey.toString(),
+          nodePeers.filter((item) => item.networkGenerationHashSeed === networkGenerationHashSeed),
+        );
+      }
     }
   }
 }

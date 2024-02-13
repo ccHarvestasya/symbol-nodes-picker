@@ -1,5 +1,7 @@
 import { PeerCreateDto } from '@/repository/peers/dto/peerCreateDto';
 import { PeersRepository } from '@/repository/peers/peers.repository';
+import { SettingCreateDto } from '@/repository/settings/dto/settingCreateDto';
+import { SettingsRepository } from '@/repository/settings/settings.repository';
 import { RestGateway } from '@/util/symboler/RestGateway';
 import { SslSocket } from '@/util/symboler/SslSocket';
 import { Injectable, Logger } from '@nestjs/common';
@@ -15,10 +17,12 @@ export class AppService {
   /**
    * コンストラクタ
    * @param configService コンフィグサービス
+   * @param settingsRepository Settingリポジトリ
    * @param peersRepository Peerリポジトリ
    */
   constructor(
     private readonly configService: ConfigService,
+    private readonly settingsRepository: SettingsRepository,
     private readonly peersRepository: PeersRepository,
   ) {}
 
@@ -32,15 +36,16 @@ export class AppService {
 
     // Peerコレクションから1件取得
     const peersDoc = await this.peersRepository.findOne();
-    if (peersDoc === null) {
+    if (!peersDoc) {
       this.logger.debug('コレクションが存在しません。初期データを読み込みます。');
+      let networkGenerationHashSeed = '';
       // 設定から初期ノードホストを取得
       const initNodeHosts = this.configService.get<string[]>('connection.init-host');
       // ノード情報登録
       for (const initNodeHost of initNodeHosts) {
         const restGw = new RestGateway(this.configService.get<number>('connection.timeout'));
         const nodeInfo = await restGw.tryHttpsNodeInfo(initNodeHost);
-        if (nodeInfo !== undefined) {
+        if (nodeInfo) {
           const peerCreateDto = new PeerCreateDto();
           peerCreateDto.host = nodeInfo.host;
           peerCreateDto.publicKey = nodeInfo.publicKey;
@@ -57,8 +62,16 @@ export class AppService {
           peerCreateDto.lastCheck = new Date();
           peerCreateDto.lastSyncCheck = new Date();
           await this.peersRepository.create(peerCreateDto);
+          // ジェネレーションハッシュシード退避
+          networkGenerationHashSeed = nodeInfo.networkGenerationHashSeed;
         }
       }
+
+      // ジェネレーションハッシュシードを保存
+      const settingCreateDto = new SettingCreateDto();
+      settingCreateDto.key = 'networkGenerationHashSeed';
+      settingCreateDto.value = networkGenerationHashSeed;
+      await this.settingsRepository.create(settingCreateDto);
     }
 
     this.logger.verbose(' end  - ' + methodName);

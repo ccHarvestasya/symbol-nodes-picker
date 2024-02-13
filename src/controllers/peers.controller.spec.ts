@@ -1,5 +1,6 @@
 import configuration from '@/config/configuration';
 import { PeersRepositoryModule } from '@/repository/peers/peers.repository.module';
+import { SettingsRepositoryModule } from '@/repository/settings/settings.repository.module';
 import { PeersService } from '@/services/peers.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
@@ -13,6 +14,7 @@ describe('PeersController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [
+        SettingsRepositoryModule,
         PeersRepositoryModule,
         MongooseModule.forRootAsync({
           imports: [
@@ -169,7 +171,7 @@ describe('PeersController', () => {
     await controller.registerNewNodePeer();
 
     /** 検証 */
-    expect(spyRegisterNewPeer.mock.calls[0][0]).toEqual([
+    expect(spyRegisterNewPeer.mock.calls[0][1]).toEqual([
       {
         host: '4t.dusanjp.com',
         publicKey: '4540B7010550CAA12F78DD3466A2645212F705F39E25A2333E9CB12DFF1A91A0',
