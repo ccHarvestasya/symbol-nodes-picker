@@ -165,7 +165,7 @@ describe('PeersController', () => {
     jest
       .spyOn(service, 'getPeerDocCheckedOldest')
       .mockResolvedValue(Promise.resolve(mockPeerDocCheckedOldest) as any);
-    const spyRegisterNewPeer = jest.spyOn(service, 'registerNewPeer');
+    const spyRegisterNewPeer = jest.spyOn(service, 'registerNewPeer').mockReturnValue(null);
 
     /** 実行 */
     await controller.registerNewNodePeer();

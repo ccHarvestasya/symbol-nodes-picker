@@ -2,10 +2,9 @@ import { PeerCreateDto } from '@/repository/peers/dto/peerCreateDto';
 import { PeersRepository } from '@/repository/peers/peers.repository';
 import { SettingCreateDto } from '@/repository/settings/dto/settingCreateDto';
 import { SettingsRepository } from '@/repository/settings/settings.repository';
-import { RestGateway } from '@/util/symboler/RestGateway';
-import { SslSocket } from '@/util/symboler/SslSocket';
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { NodeHttp, SymbolSdkExt } from 'symbol-sdk-ext';
 
 @Injectable()
 export class AppService {
@@ -42,9 +41,12 @@ export class AppService {
       // 設定から初期ノードホストを取得
       const initNodeHosts = this.configService.get<string[]>('connection.init-host');
       // ノード情報登録
+      const timeout = this.configService.get<number>('connection.timeout');
       for (const initNodeHost of initNodeHosts) {
-        const restGw = new RestGateway(this.configService.get<number>('connection.timeout'));
-        const nodeInfo = await restGw.tryHttpsNodeInfo(initNodeHost);
+        const symbolSdkExt = new SymbolSdkExt(timeout);
+        const isHttps = await symbolSdkExt.isEnableHttps(initNodeHost);
+        const nodeHttp = new NodeHttp(initNodeHost, isHttps, timeout);
+        const nodeInfo = await nodeHttp.getNodeInfo();
         if (nodeInfo) {
           const peerCreateDto = new PeerCreateDto();
           peerCreateDto.host = nodeInfo.host;
@@ -77,34 +79,34 @@ export class AppService {
     this.logger.verbose(' end  - ' + methodName);
   }
 
-  async registerPeer2Peers() {
-    const methodName = 'registerPeer2Peers';
-    this.logger.verbose('start - ' + methodName);
+  // async registerPeer2Peers() {
+  //   const methodName = 'registerPeer2Peers';
+  //   this.logger.verbose('start - ' + methodName);
 
-    const sslScoket = new SslSocket();
-    await sslScoket.getNodeInfo('symbol02.harvestasya.com', 7900);
+  //   const sslScoket = new SslSocket();
+  //   await sslScoket.getNodeInfo('symbol02.harvestasya.com', 7900);
 
-    //   // リクエスト上限まで取得
-    //   const peersDocs = await this.peersRepository.findLimit(
-    //     new PeersFindDto(),
-    //     this.configService.get<number>('request-count'),
-    //   );
+  //   //   // リクエスト上限まで取得
+  //   //   const peersDocs = await this.peersRepository.findLimit(
+  //   //     new PeersFindDto(),
+  //   //     this.configService.get<number>('request-count'),
+  //   //   );
 
-    //   // チャンク数
-    //   const chunk =
-    //     peersDocs.length < this.configService.get<number>('request-chunk')
-    //       ? peersDocs.length
-    //       : this.configService.get<number>('request-chunk');
+  //   //   // チャンク数
+  //   //   const chunk =
+  //   //     peersDocs.length < this.configService.get<number>('request-chunk')
+  //   //       ? peersDocs.length
+  //   //       : this.configService.get<number>('request-chunk');
 
-    //   // チャンク数分並列処理
-    //   const promises: Promise<void>[] = [];
-    //   for (let i = 0; i < chunk; i++) {
-    //     promises.push(this.getNodePeers(peers));
-    //   }
-    //   await Promise.all(promises);
+  //   //   // チャンク数分並列処理
+  //   //   const promises: Promise<void>[] = [];
+  //   //   for (let i = 0; i < chunk; i++) {
+  //   //     promises.push(this.getNodePeers(peers));
+  //   //   }
+  //   //   await Promise.all(promises);
 
-    this.logger.verbose(' end  - ' + methodName);
-  }
+  //   this.logger.verbose(' end  - ' + methodName);
+  // }
 
   getHello(): string {
     return 'Hello World!';

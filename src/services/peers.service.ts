@@ -6,12 +6,11 @@ import { PeersRepository } from '@/repository/peers/peers.repository';
 import { SettingKeyDto } from '@/repository/settings/dto/settingKeyDto';
 import { SettingsRepository } from '@/repository/settings/settings.repository';
 import { PeerDocument } from '@/schema/peer.schema';
-import { RestGateway } from '@/util/symboler/RestGateway';
-import { SslSocket } from '@/util/symboler/SslSocket';
-import { NodeInfo } from '@/util/symboler/model/NodeInfo';
-import { NodePeer } from '@/util/symboler/model/NodePeer';
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { NodeCat, NodeHttp, SymbolSdkExt } from 'symbol-sdk-ext';
+import { NodeInfo } from 'symbol-sdk-ext/dist/model/NodeInfo';
+import { NodePeer } from 'symbol-sdk-ext/dist/model/NodePeer';
 
 export class NodeKey {
   host: string;
@@ -69,7 +68,6 @@ export class PeersService {
       const unregistrationPeers: NodePeer[] = [];
       // 未登録ピアリスト作成
       for (const nodePeer of nodePeers) {
-        this.logger.debug(`${processList.host}:${nodePeer.host}:${nodePeer.friendlyName}`);
         // Peersコレクション存在チェック
         const findDto = new PeersFindDto();
         findDto.host = nodePeer.host;
@@ -311,14 +309,14 @@ export class PeersService {
     nodeInfoMap: Map<string, NodeInfo>,
   ) {
     let processList: NodeKey;
+    const timeout = this.configService.get<number>('connection.timeout');
     while ((processList = nodeKeys.shift()) !== undefined) {
       // ピア問い合わせ
       const host = processList.host;
       const publicKey = processList.publicKey;
       const port = processList.port;
-      const timeout = this.configService.get<number>('connection.timeout');
-      const sslScoket = new SslSocket(timeout);
-      const nodeInfo = await sslScoket.getNodeInfo(host, port);
+      const nodeCat = new NodeCat(host, port, timeout);
+      const nodeInfo = await nodeCat.getNodeInfo();
       if (nodeInfo && nodeInfo.networkGenerationHashSeed === networkGenerationHashSeed) {
         // マップにセット
         const mapKey = [host, publicKey]; // IPのみはhost入ってないパターンがある
@@ -339,13 +337,15 @@ export class PeersService {
     nodeInfoMap: Map<string, NodeInfo>,
   ) {
     let processList: NodeKey;
+    const timeout = this.configService.get<number>('connection.timeout');
+    const symbolSdkExt = new SymbolSdkExt(timeout);
     while ((processList = nodeKeys.shift()) !== undefined) {
       // ピア問い合わせ
       const host = processList.host;
       const publicKey = processList.publicKey;
-      const timeout = this.configService.get<number>('connection.timeout');
-      const restGateway = new RestGateway(timeout);
-      const nodeInfo = await restGateway.tryHttpsNodeInfo(host);
+      const isHttps = await symbolSdkExt.isEnableHttps(host);
+      const nodeHttp = new NodeHttp(host, isHttps, timeout);
+      const nodeInfo = await nodeHttp.getNodeInfo();
       if (nodeInfo && nodeInfo.networkGenerationHashSeed === networkGenerationHashSeed) {
         // マップにセット
         const mapKey = [host, publicKey]; // IPのみはhost入ってないパターンがある
@@ -366,14 +366,14 @@ export class PeersService {
     nodePeersMap: Map<string, NodePeer[]>,
   ) {
     let processList: NodeKey;
+    const timeout = this.configService.get<number>('connection.timeout');
     while ((processList = nodeKeys.shift()) !== undefined) {
       // ピア問い合わせ
       const host = processList.host;
       const publicKey = processList.publicKey;
       const port = processList.port;
-      const timeout = this.configService.get<number>('connection.timeout');
-      const sslScoket = new SslSocket(timeout);
-      const nodePeers = await sslScoket.getNodePeers(host, port);
+      const nodeCat = new NodeCat(host, port, timeout);
+      const nodePeers = await nodeCat.getNodePeers();
       if (nodePeers) {
         // マップにセット
         const mapKey = [host, publicKey]; // IPのみはhost入ってないパターンがある
@@ -397,13 +397,15 @@ export class PeersService {
     nodePeersMap: Map<string, NodePeer[]>,
   ) {
     let processList: NodeKey;
+    const timeout = this.configService.get<number>('connection.timeout');
+    const symbolSdkExt = new SymbolSdkExt(timeout);
     while ((processList = nodeKeys.shift()) !== undefined) {
       // ピア問い合わせ
       const host = processList.host;
       const publicKey = processList.publicKey;
-      const timeout = this.configService.get<number>('connection.timeout');
-      const restGateway = new RestGateway(timeout);
-      const nodePeers = await restGateway.tryHttpsNodePeers(host);
+      const isHttps = await symbolSdkExt.isEnableHttps(host);
+      const nodeHttp = new NodeHttp(host, isHttps, timeout);
+      const nodePeers = await nodeHttp.getNodePeers();
       if (nodePeers) {
         // マップにセット
         const mapKey = [host, publicKey]; // IPのみはhost入ってないパターンがある

@@ -4,14 +4,13 @@ import { SettingsRepository } from '@/repository/settings/settings.repository';
 import { Peer, PeerDocument } from '@/schema/peer.schema';
 import { Setting } from '@/schema/setting.schema';
 import { PeersService } from '@/services/peers.service';
-import { RestGateway } from '@/util/symboler/RestGateway';
-import { SslSocket } from '@/util/symboler/SslSocket';
-import { NodeInfo } from '@/util/symboler/model/NodeInfo';
-import { NodePeer } from '@/util/symboler/model/NodePeer';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { getModelToken } from '@nestjs/mongoose';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Model } from 'mongoose';
+import { NodeCat, NodeHttp } from 'symbol-sdk-ext';
+import { NodeInfo } from 'symbol-sdk-ext/dist/model/NodeInfo';
+import { NodePeer } from 'symbol-sdk-ext/dist/model/NodePeer';
 
 /**
  * NodePeerモックデータ(Socket)
@@ -400,7 +399,7 @@ describe('PeersService', () => {
 
   it('NodeInfo取得', async () => {
     // モック
-    jest.spyOn(SslSocket.prototype as any, 'getNodeInfo').mockImplementationOnce(() =>
+    jest.spyOn(NodeCat.prototype as any, 'getNodeInfo').mockImplementationOnce(() =>
       Promise.resolve({
         host: '4t.dusanjp.com.test',
         publicKey: '4540B7010550CAA12F78DD3466A2645212F705F39E25A2333E9CB12DFF1A91A0',
@@ -417,7 +416,7 @@ describe('PeersService', () => {
         nodePublicKey: '4F9575A9630EA3546476043FEA8B2A8FEA81E77BAFD9D997B86BDF8908FB2170',
       }),
     );
-    jest.spyOn(RestGateway.prototype as any, 'tryHttpsNodeInfo').mockImplementationOnce(() =>
+    jest.spyOn(NodeHttp.prototype as any, 'getNodeInfo').mockImplementationOnce(() =>
       Promise.resolve({
         host: '4t.dusanjp.com.test',
         publicKey: '4540B7010550CAA12F78DD3466A2645212F705F39E25A2333E9CB12DFF1A91A0',
@@ -443,7 +442,6 @@ describe('PeersService', () => {
       },
     ];
     const nodeInfoMap = await service.getNodeInfo(processList);
-    console.log(nodeInfoMap);
 
     // 検証
     const socket = new Map<string, NodeInfo>();
@@ -488,7 +486,7 @@ describe('PeersService', () => {
 
   it('NodePeers取得', async () => {
     // モック
-    jest.spyOn(SslSocket.prototype as any, 'getNodePeers').mockImplementationOnce(() =>
+    jest.spyOn(NodeCat.prototype as any, 'getNodePeers').mockImplementationOnce(() =>
       Promise.resolve([
         {
           version: 16777989,
@@ -525,7 +523,7 @@ describe('PeersService', () => {
         },
       ]),
     );
-    jest.spyOn(RestGateway.prototype as any, 'tryHttpsNodePeers').mockImplementationOnce(() =>
+    jest.spyOn(NodeHttp.prototype as any, 'getNodePeers').mockImplementationOnce(() =>
       Promise.resolve([
         {
           version: 16777989,
