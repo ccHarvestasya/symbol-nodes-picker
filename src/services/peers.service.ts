@@ -145,6 +145,13 @@ export class PeersService {
         peerCreateDto.lastCheck = new Date();
         peerCreateDto.lastSyncCheck = new Date();
         if (nodeInfo !== undefined) {
+          peerCreateDto.port = nodeInfo.port;
+          peerCreateDto.friendlyName = nodeInfo.friendlyName;
+          peerCreateDto.version = nodeInfo.version;
+          peerCreateDto.networkGenerationHashSeed =
+            nodeInfo.networkGenerationHashSeed;
+          peerCreateDto.roles = nodeInfo.roles;
+          peerCreateDto.networkIdentifier = nodeInfo.networkIdentifier;
           peerCreateDto.nodePublicKey = nodeInfo.nodePublicKey;
           peerCreateDto.isHttpsEnabled = await new SymbolSdkExt().isEnableHttps(
             nodePeer.host,
@@ -170,6 +177,13 @@ export class PeersService {
         updateDto.lastCheck = new Date();
         updateDto.lastSyncCheck = new Date();
         if (nodeInfo !== undefined) {
+          updateDto.port = nodeInfo.port;
+          updateDto.friendlyName = nodeInfo.friendlyName;
+          updateDto.version = nodeInfo.version;
+          updateDto.networkGenerationHashSeed =
+            nodeInfo.networkGenerationHashSeed;
+          updateDto.roles = nodeInfo.roles;
+          updateDto.networkIdentifier = nodeInfo.networkIdentifier;
           updateDto.nodePublicKey = nodeInfo.nodePublicKey;
           updateDto.isHttpsEnabled = await new SymbolSdkExt().isEnableHttps(
             nodePeer.host,

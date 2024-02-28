@@ -11,4 +11,4 @@ import { MongooseModule } from '@nestjs/mongoose';
   providers: [ChainRepository],
   exports: [ChainRepository],
 })
-export class PeersRepositoryModule {}
+export class ChainRepositoryModule {}

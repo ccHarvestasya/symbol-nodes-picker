@@ -1,4 +1,5 @@
 import { ChainCreateDto } from '@/repository/chain/dto/chainCreateDto';
+import { ChainFindDto } from '@/repository/chain/dto/chainFindDto';
 import { ChainKeyDto } from '@/repository/chain/dto/chainKeyDto';
 import { ChainUpdateDto } from '@/repository/chain/dto/chainUpdateDto';
 import { Chain, ChainDocument } from '@/schema/chain.schema';
@@ -23,6 +24,14 @@ export class ChainRepository {
    */
   async create(createDto: ChainCreateDto): Promise<ChainDocument> {
     return await this.chainModel.create(createDto);
+  }
+
+  /**
+   * Chainコレクション単一検索
+   * @returns ピアドキュメント
+   */
+  async findOne(findDto?: ChainFindDto): Promise<ChainDocument> {
+    return this.chainModel.findOne(findDto).exec();
   }
 
   /**

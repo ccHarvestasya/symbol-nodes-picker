@@ -1,9 +1,12 @@
 import { AppController } from '@/app.controller';
 import { AppService } from '@/app.service';
 import configuration from '@/config/configuration';
+import { ChainModule } from '@/modules/chain.module';
 import { PeersModule } from '@/modules/peers.module';
+import { ChainRepositoryModule } from '@/repository/chain/chain.repository.module';
 import { PeersRepositoryModule } from '@/repository/peers/peers.repository.module';
 import { SettingsRepositoryModule } from '@/repository/settings/settings.repository.module';
+import { ChainService } from '@/services/chain.service';
 import { PeersService } from '@/services/peers.service';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -29,8 +32,10 @@ import { ScheduleModule } from '@nestjs/schedule';
     SettingsRepositoryModule,
     PeersRepositoryModule,
     PeersModule,
+    ChainRepositoryModule,
+    ChainModule,
   ],
   controllers: [AppController],
-  providers: [AppService, PeersService],
+  providers: [AppService, PeersService, ChainService],
 })
 export class AppModule {}

@@ -15,7 +15,7 @@ export class PeersController {
 
   constructor(private readonly peersService: PeersService) {}
 
-  @Cron('0 */10 * * * *')
+  @Cron('0 */13 * * * *')
   async registerNewNodePeer() {
     const methodName = 'registerNewNodePeer';
     this.logger.verbose('start - ' + methodName);
