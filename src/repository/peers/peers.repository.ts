@@ -33,7 +33,10 @@ export class PeersRepository {
    * @param updateDto 更新DTO
    * @returns 更新結果
    */
-  async updateOne(keyDto: PeerKeyDto, updateDto: PeerUpdateDto): Promise<UpdateWriteOpResult> {
+  async updateOne(
+    keyDto: PeerKeyDto,
+    updateDto: PeerUpdateDto,
+  ): Promise<UpdateWriteOpResult> {
     return this.peerModel.updateOne(keyDto, updateDto).exec();
   }
 
@@ -44,8 +47,15 @@ export class PeersRepository {
    * @param limit 取得件数
    * @returns ピアドキュメント配列
    */
-  async findIsOldLimit(findDto: PeersFindDto, limit: number): Promise<PeerDocument[]> {
-    return this.peerModel.find(findDto).sort({ lastCheck: -1 }).limit(limit).exec();
+  async findIsOldLimit(
+    findDto: PeersFindDto,
+    limit: number,
+  ): Promise<PeerDocument[]> {
+    return this.peerModel
+      .find(findDto)
+      .sort({ lastCheck: -1 })
+      .limit(limit)
+      .exec();
   }
 
   /**

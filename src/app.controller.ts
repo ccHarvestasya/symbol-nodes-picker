@@ -1,6 +1,5 @@
 import { AppService } from '@/app.service';
-import { PeersService } from '@/services/peers.service';
-import { Controller, Get, Logger } from '@nestjs/common';
+import { Controller, Logger } from '@nestjs/common';
 
 @Controller()
 export class AppController {
@@ -13,10 +12,7 @@ export class AppController {
    * コンストラクタ
    * @param appService Appサービス
    */
-  constructor(
-    private readonly appService: AppService,
-    private readonly peersService: PeersService,
-  ) {}
+  constructor(private readonly appService: AppService) {}
 
   /**
    * ホストモジュールの依存関係が解決されると呼び出されます。
@@ -67,50 +63,4 @@ export class AppController {
     this.logger.verbose('start - ' + methodName);
     this.logger.verbose(' end  - ' + methodName);
   }
-
-  // @Cron(CronExpression.EVERY_30_SECONDS)
-  // handleCron() {
-  //   this.logger.debug('Called every 30 seconds');
-  // }
-
-  @Get()
-  getHello(): string {
-    return this.appService.getHello();
-  }
-
-  // @Get('/test')
-  // async getTest() {
-  //   // this.peersService.checkPeers();
-  // }
-
-  // // TODO 以下確認用
-  // @Get('/socket/chaininfo')
-  // async getSocketChainInfo(): Promise<string> {
-  //   const sslScoket = new SslSocket();
-  //   return JSON.stringify(
-  //     await sslScoket.getChainInfo('symbol02.harvestasya.com', 7900),
-  //     // await sslScoket.getChainInfo('4t.dusanjp.com', 7900),
-  //     (key, value) => {
-  //       return typeof value === 'bigint' ? value.toString() : value;
-  //     },
-  //   );
-  // }
-
-  // @Get('/socket/nodeinfo')
-  // async getSocketNodeInfo(): Promise<string> {
-  //   const sslScoket = new SslSocket();
-  //   return JSON.stringify(await sslScoket.getNodeInfo('symbol02.harvestasya.com', 7900));
-  // }
-
-  // @Get('/socket/nodepeers')
-  // async getSocketNodePeers(): Promise<string> {
-  //   const sslScoket = new SslSocket();
-  //   return JSON.stringify(await sslScoket.getNodePeers('symbol02.harvestasya.com', 7900));
-  // }
-
-  // @Get('/socket/unlockedaccount')
-  // async getSocketNodeUnlockedAccount(): Promise<string> {
-  //   const sslScoket = new SslSocket();
-  //   return JSON.stringify(await sslScoket.getNodeUnlockedAccount('symbol02.harvestasya.com', 7900));
-  // }
 }

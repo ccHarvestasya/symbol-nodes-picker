@@ -12,7 +12,9 @@ export class SettingsRepository {
    * コンストラクタ
    * @param settingModel 設定モデル
    */
-  constructor(@InjectModel(Setting.name) private settingModel: Model<SettingDocument>) {}
+  constructor(
+    @InjectModel(Setting.name) private settingModel: Model<SettingDocument>,
+  ) {}
 
   /**
    * 登録

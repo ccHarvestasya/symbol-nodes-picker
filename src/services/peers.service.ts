@@ -8,9 +8,12 @@ import { SettingsRepository } from '@/repository/settings/settings.repository';
 import { PeerDocument } from '@/schema/peer.schema';
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { NodeCat, NodeHttp, SymbolSdkExt } from 'symbol-sdk-ext';
-import { NodeInfo } from 'symbol-sdk-ext/dist/model/NodeInfo';
-import { NodePeer } from 'symbol-sdk-ext/dist/model/NodePeer';
+import {
+  RepositoryFactoryHttp,
+  RepositoryFactorySocket,
+  SymbolSdkExt,
+} from 'symbol-sdk-ext';
+import { NodeInfo, NodePeer } from 'symbol-sdk-ext/dist/model/node';
 
 export class NodeKey {
   host: string;
@@ -39,121 +42,147 @@ export class PeersService {
     private readonly peersRepository: PeersRepository,
   ) {}
 
-  /**
-   * 新しいPeerの登録
-   * @param networkGenerationHashSeed ネットワークジェネレーションハッシュ
-   * @param nodeKeys ノードキー配列
-   */
-  async registerNewPeer(networkGenerationHashSeed: string, nodeKeys: NodeKey[]): Promise<void> {
-    const methodName = 'registerNewPeer';
-    this.logger.verbose('start - ' + methodName);
+  async getNodePeersMap(
+    peerDocs: PeerDocument[],
+    networkGenerationHashSeed: string,
+  ) {
+    // 設定からタイムアウトを取得
+    const timeout = this.configService.get<number>('connection.timeout');
 
-    // 取得したPeerのPeersを取得
-    const nodePeerMaps = await this.getNodePeers(networkGenerationHashSeed, nodeKeys);
-
-    // 登録/未登録ピアリスト作成
-    for (const processList of nodeKeys) {
-      // HTTP通信で取得したデータを優先する
-      const mapKey = [processList.host, processList.publicKey];
-      let nodePeers: NodePeer[] = undefined;
-      if (nodePeerMaps.restGw.has(mapKey.toString())) {
-        nodePeers = nodePeerMaps.restGw.get(mapKey.toString());
-      } else if (nodePeerMaps.socket.has(mapKey.toString())) {
-        nodePeers = nodePeerMaps.socket.get(mapKey.toString());
-      }
-
-      if (!nodePeers) continue;
-
-      const registrationPeers: NodePeer[] = [];
-      const unregistrationPeers: NodePeer[] = [];
-      // 未登録ピアリスト作成
-      for (const nodePeer of nodePeers) {
-        // Peersコレクション存在チェック
-        const findDto = new PeersFindDto();
-        findDto.host = nodePeer.host;
-        findDto.publicKey = nodePeer.publicKey;
-        const peerDoc = await this.peersRepository.findOne(findDto);
-        if (!peerDoc) {
-          // 未登録分をリスト化
-          unregistrationPeers.push(nodePeer);
-        } else {
-          registrationPeers.push(nodePeer);
-        }
-      }
-
-      // NodeInfo取得
-      const processLists: NodeKey[] = [];
-      for (const unregistrationPeer of unregistrationPeers) {
-        processLists.push({
-          host: unregistrationPeer.host,
-          publicKey: unregistrationPeer.publicKey,
-          port: unregistrationPeer.port,
-        });
-      }
-      const nodeInfoMaps = await this.getNodeInfo(processLists);
-
-      // 既存のPeers更新
-      for (const registrationPeer of registrationPeers) {
-        // 既存の場合は同期チェック日時を更新する
-        const keyDto = new PeerKeyDto(registrationPeer.host, registrationPeer.publicKey);
-        const updateDto = new PeerUpdateDto();
-        updateDto.lastCheck = new Date();
-        updateDto.lastSyncCheck = new Date();
-        await this.peersRepository.updateOne(keyDto, updateDto);
-      }
-
-      // 新しいPeers登録
-      for (const unregistrationPeer of unregistrationPeers) {
-        try {
-          // HTTP通信で取得したデータを優先する
-          const mapKey = [unregistrationPeer.host, unregistrationPeer.publicKey];
-          let nodeInfo: NodeInfo = undefined;
-          let socketNodeInfo: NodeInfo = undefined;
-          if (nodeInfoMaps.restGw.has(mapKey.toString())) {
-            nodeInfo = nodeInfoMaps.restGw.get(mapKey.toString());
-            socketNodeInfo = nodeInfoMaps.socket.get(mapKey.toString());
-          } else if (nodeInfoMaps.socket.has(mapKey.toString())) {
-            nodeInfo = nodeInfoMaps.socket.get(mapKey.toString());
-          }
-
-          const peerCreateDto = new PeerCreateDto();
-          if (nodeInfo !== undefined) {
-            peerCreateDto.host = nodeInfo.host;
-            peerCreateDto.publicKey = nodeInfo.publicKey;
-            peerCreateDto.nodePublicKey = nodeInfo.nodePublicKey;
-            peerCreateDto.port = nodeInfo.port;
-            peerCreateDto.friendlyName = nodeInfo.friendlyName;
-            peerCreateDto.version = nodeInfo.version;
-            peerCreateDto.networkGenerationHashSeed = nodeInfo.networkGenerationHashSeed;
-            peerCreateDto.roles = nodeInfo.roles;
-            peerCreateDto.networkIdentifier = nodeInfo.networkIdentifier;
-            peerCreateDto.isHttpsEnabled = nodeInfo.isHttpsEnabled;
-            peerCreateDto.certificateExpirationDate = socketNodeInfo?.certificateExpirationDate;
-            peerCreateDto.isAvailable = true;
-            peerCreateDto.lastCheck = new Date();
-            peerCreateDto.lastSyncCheck = new Date();
-          } else {
-            peerCreateDto.host = unregistrationPeer.host;
-            peerCreateDto.publicKey = unregistrationPeer.publicKey;
-            peerCreateDto.port = unregistrationPeer.port;
-            peerCreateDto.friendlyName = unregistrationPeer.friendlyName;
-            peerCreateDto.version = unregistrationPeer.version;
-            peerCreateDto.networkGenerationHashSeed = unregistrationPeer.networkGenerationHashSeed;
-            peerCreateDto.roles = unregistrationPeer.roles;
-            peerCreateDto.networkIdentifier = unregistrationPeer.networkIdentifier;
-            peerCreateDto.isHttpsEnabled = false;
-            peerCreateDto.isAvailable = false;
-            peerCreateDto.lastCheck = new Date();
-            peerCreateDto.lastSyncCheck = new Date();
-          }
-          await this.peersRepository.create(peerCreateDto);
-        } catch (e) {
-          this.logger.error(e);
-        }
-      }
+    // チャンク数取得
+    let chunk = this.configService.get<number>('connection.request-chunk');
+    if (peerDocs.length < chunk) {
+      chunk = peerDocs.length;
     }
 
-    this.logger.verbose(' end  - ' + methodName);
+    //処理リスト作成
+    const peerDocProcesses: PeerDocument[][] = new Array(chunk);
+    for (let i = 0; i < chunk; i++) {
+      peerDocProcesses[i] = [];
+    }
+    let chunkIndex = 0;
+    for (const peerDoc of peerDocs) {
+      const index = chunkIndex % chunk;
+      peerDocProcesses[index].push(peerDoc);
+      chunkIndex++;
+    }
+
+    // /node/peers取得
+    const nodePeersPromises: Promise<void>[] = [];
+    const nodePeersMap = new Map<string, NodePeer>();
+    for (let i = 0; i < chunk; i++) {
+      nodePeersPromises.push(
+        this.getNodePeers(
+          peerDocProcesses[i],
+          timeout,
+          networkGenerationHashSeed,
+          nodePeersMap,
+        ),
+      );
+    }
+    await Promise.all(nodePeersPromises);
+
+    return nodePeersMap;
+  }
+
+  async getNodePeerInfos(nodePeersMap: Map<string, NodePeer>) {
+    // マップを配列に変換
+    const nodePeers: NodePeer[] = [...nodePeersMap.values()];
+
+    // 設定からタイムアウトを取得
+    const timeout = this.configService.get<number>('connection.timeout');
+
+    // チャンク数取得
+    let chunk = this.configService.get<number>('connection.request-chunk');
+    if (nodePeers.length < chunk) {
+      chunk = nodePeers.length;
+    }
+
+    //処理リスト作成
+    const processesList: NodePeer[][] = new Array(chunk);
+    for (let i = 0; i < chunk; i++) {
+      processesList[i] = [];
+    }
+    let chunkIndex = 0;
+    for (const nodePeer of nodePeers) {
+      const index = chunkIndex % chunk;
+      processesList[index].push(nodePeer);
+      chunkIndex++;
+    }
+
+    // /node/info取得
+    const nodeInfoPromises: Promise<(NodePeer | NodeInfo)[][]>[] = [];
+    for (let i = 0; i < chunk; i++) {
+      nodeInfoPromises.push(this.getNodePeerInfoSet(processesList[i], timeout));
+    }
+    const nodePeerInfos = (await Promise.all(nodeInfoPromises)).flat();
+
+    return nodePeerInfos;
+  }
+
+  async updatePeerInfo(nodePeer: NodePeer, nodeInfo: NodeInfo | undefined) {
+    try {
+      // Peersコレクション存在チェック
+      const findDto = new PeersFindDto();
+      findDto.host = nodePeer.host;
+      findDto.publicKey = nodePeer.publicKey;
+      const peerDoc = await this.peersRepository.findOne(findDto);
+
+      if (!peerDoc) {
+        // 登録
+        const peerCreateDto = new PeerCreateDto();
+        peerCreateDto.host = nodePeer.host;
+        peerCreateDto.publicKey = nodePeer.publicKey;
+        peerCreateDto.port = nodePeer.port;
+        peerCreateDto.friendlyName = nodePeer.friendlyName;
+        peerCreateDto.version = nodePeer.version;
+        peerCreateDto.networkGenerationHashSeed =
+          nodePeer.networkGenerationHashSeed;
+        peerCreateDto.roles = nodePeer.roles;
+        peerCreateDto.networkIdentifier = nodePeer.networkIdentifier;
+        peerCreateDto.isAvailable = false;
+        peerCreateDto.isHttpsEnabled = false;
+        peerCreateDto.lastCheck = new Date();
+        peerCreateDto.lastSyncCheck = new Date();
+        if (nodeInfo !== undefined) {
+          peerCreateDto.nodePublicKey = nodeInfo.nodePublicKey;
+          peerCreateDto.isHttpsEnabled = await new SymbolSdkExt().isEnableHttps(
+            nodePeer.host,
+          );
+          peerCreateDto.certificateExpirationDate =
+            nodeInfo?.certificateExpirationDate;
+          peerCreateDto.isAvailable = true;
+        }
+        await this.peersRepository.create(peerCreateDto);
+      } else {
+        // 更新
+        const keyDto = new PeerKeyDto(nodePeer.host, nodePeer.publicKey);
+        const updateDto = new PeerUpdateDto();
+        updateDto.port = nodePeer.port;
+        updateDto.friendlyName = nodePeer.friendlyName;
+        updateDto.version = nodePeer.version;
+        updateDto.networkGenerationHashSeed =
+          nodePeer.networkGenerationHashSeed;
+        updateDto.roles = nodePeer.roles;
+        updateDto.networkIdentifier = nodePeer.networkIdentifier;
+        updateDto.isAvailable = false;
+        updateDto.isHttpsEnabled = false;
+        updateDto.lastCheck = new Date();
+        updateDto.lastSyncCheck = new Date();
+        if (nodeInfo !== undefined) {
+          updateDto.nodePublicKey = nodeInfo.nodePublicKey;
+          updateDto.isHttpsEnabled = await new SymbolSdkExt().isEnableHttps(
+            nodePeer.host,
+          );
+          updateDto.certificateExpirationDate =
+            nodeInfo?.certificateExpirationDate;
+          updateDto.isAvailable = true;
+        }
+        await this.peersRepository.updateOne(keyDto, updateDto);
+      }
+    } catch (e) {
+      this.logger.error(e);
+    }
   }
 
   /**
@@ -161,14 +190,10 @@ export class PeersService {
    * @returns Peersドキュメント配列
    */
   async getPeerDocCheckedOldest(): Promise<PeerDocument[]> {
-    const methodName = 'registerNewPeerToPeers';
-    this.logger.verbose('start - ' + methodName);
-
     const findDto = new PeersFindDto();
     const limit = this.configService.get<number>('connection.request-count');
     const peerDocs = await this.peersRepository.findIsOldLimit(findDto, limit);
 
-    this.logger.verbose(' end  - ' + methodName);
     return peerDocs;
   }
 
@@ -177,243 +202,100 @@ export class PeersService {
    * @returns ジェネレーションハッシュシード
    */
   async getNetworkGenerationHashSeed(): Promise<string> {
-    const methodName = 'getNetworkGenerationHashSeed';
-    this.logger.verbose('start - ' + methodName);
-
     const keyDto = new SettingKeyDto('networkGenerationHashSeed');
     const settingDoc = await this.settingsRepository.findOne(keyDto);
 
-    this.logger.verbose(' end  - ' + methodName);
     return settingDoc.value;
   }
 
-  /**
-   * NodeInfo取得
-   * ソケットとHTTPからNodeInfoを取得する
-   * @param nodeKeys ノードキー配列
-   * @returns ソケットとHTTPから取得したNodeInfo
-   */
-  async getNodeInfo(
-    nodeKeys: NodeKey[],
-  ): Promise<{ socket: Map<string, NodeInfo>; restGw: Map<string, NodeInfo> }> {
-    const methodName = 'getNodeInfo';
-    this.logger.verbose('start - ' + methodName);
-
-    // コピー
-    const socketProcessLists = nodeKeys.concat();
-    const restGwProcessLists = nodeKeys.concat();
-
-    // チャンク数取得
-    let chunk = this.configService.get<number>('connection.request-chunk');
-    if (nodeKeys.length < chunk) {
-      chunk = nodeKeys.length;
-    }
-
-    // チャンク数分並列処理
-    // ソケット通信
-    const socketPromises: Promise<void>[] = [];
-    const scoketNodeInfoMap = new Map<string, NodeInfo>();
-    for (let i = 0; i < chunk; i++) {
-      socketPromises.push(
-        this.getSocketNodeInfoParallel(
-          '49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4',
-          socketProcessLists,
-          scoketNodeInfoMap,
-        ),
-      );
-    }
-    // HTTP通信
-    const restGwPromises: Promise<void>[] = [];
-    const restGwNodeInfoMap = new Map<string, NodeInfo>();
-    for (let i = 0; i < chunk; i++) {
-      restGwPromises.push(
-        this.getRestGwNodeInfoParallel(
-          '49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4',
-          restGwProcessLists,
-          restGwNodeInfoMap,
-        ),
-      );
-    }
-    // 並列処理
-    await Promise.all([await Promise.all(socketPromises), await Promise.all(restGwPromises)]);
-
-    this.logger.verbose(' end  - ' + methodName);
-    return { socket: scoketNodeInfoMap, restGw: restGwNodeInfoMap };
-  }
-
-  /**
-   * NodePeers取得
-   * ソケットとHTTPからNodePeersを取得する
-   * @param networkGenerationHashSeed ネットワークジェネレーションハッシュ
-   * @param nodeKeys ノードキー配列
-   * @returns ソケットとHTTPから取得したNodePeers
-   */
-  async getNodePeers(
+  private async getNodePeers(
+    peerDocs: PeerDocument[],
+    timeout: number,
     networkGenerationHashSeed: string,
-    nodeKeys: NodeKey[],
-  ): Promise<{ socket: Map<string, NodePeer[]>; restGw: Map<string, NodePeer[]> }> {
-    const methodName = 'getNodePeers';
-    this.logger.verbose('start - ' + methodName);
-
-    // コピー
-    const socketNodeInfos = nodeKeys.concat();
-    const restGwNodeInfos = nodeKeys.concat();
-
-    /** チャンク数取得 **/
-    let chunk = this.configService.get<number>('connection.request-chunk');
-    if (nodeKeys.length < chunk) {
-      chunk = nodeKeys.length;
-    }
-
-    /** チャンク数分並列処理 **/
-    // ソケット通信
-    const socketPromises: Promise<void>[] = [];
-    const scoketNodePeersMap = new Map<string, NodePeer[]>();
-    for (let i = 0; i < chunk; i++) {
-      socketPromises.push(
-        this.getSoketNodePeersParallel(
-          networkGenerationHashSeed,
-          socketNodeInfos,
-          scoketNodePeersMap,
-        ),
-      );
-    }
-    // HTTP通信
-    const restGwPromises: Promise<void>[] = [];
-    const restGwNodePeersMap = new Map<string, NodePeer[]>();
-    for (let i = 0; i < chunk; i++) {
-      restGwPromises.push(
-        this.getRestGwNodePeersParallel(
-          networkGenerationHashSeed,
-          restGwNodeInfos,
-          restGwNodePeersMap,
-        ),
-      );
-    }
-    // 並列処理
-    await Promise.all([await Promise.all(socketPromises), await Promise.all(restGwPromises)]);
-
-    this.logger.verbose(' end  - ' + methodName);
-    return { socket: scoketNodePeersMap, restGw: restGwNodePeersMap };
-  }
-
-  /**
-   * ソケット通信でNodeInfo取得（並列処理）
-   * @param networkGenerationHashSeed ネットワークジェネレーションハッシュ
-   * @param nodeKeys ノードキー配列
-   * @param nodeInfoMap NodeInfoマップ
-   */
-  private async getSocketNodeInfoParallel(
-    networkGenerationHashSeed: string,
-    nodeKeys: NodeKey[],
-    nodeInfoMap: Map<string, NodeInfo>,
+    nodePeersMap: Map<string, NodePeer>,
   ) {
-    let processList: NodeKey;
-    const timeout = this.configService.get<number>('connection.timeout');
-    while ((processList = nodeKeys.shift()) !== undefined) {
-      // ピア問い合わせ
-      const host = processList.host;
-      const publicKey = processList.publicKey;
-      const port = processList.port;
-      const nodeCat = new NodeCat(host, port, timeout);
-      const nodeInfo = await nodeCat.getNodeInfo();
-      if (nodeInfo && nodeInfo.networkGenerationHashSeed === networkGenerationHashSeed) {
-        // マップにセット
-        const mapKey = [host, publicKey]; // IPのみはhost入ってないパターンがある
-        nodeInfoMap.set(mapKey.toString(), nodeInfo);
-      }
-    }
-  }
+    for (const peerDoc of peerDocs) {
+      const nodeHost = peerDoc.host;
+      const nodePort = peerDoc.port;
+      const isHttps = peerDoc.isHttpsEnabled;
 
-  /**
-   * HTTP通信でNodeInfo取得（並列処理）
-   * @param networkGenerationHashSeed ネットワークジェネレーションハッシュ
-   * @param nodeKeys ノードキー配列
-   * @param nodeInfoMap NodeInfoマップ
-   */
-  private async getRestGwNodeInfoParallel(
-    networkGenerationHashSeed: string,
-    nodeKeys: NodeKey[],
-    nodeInfoMap: Map<string, NodeInfo>,
-  ) {
-    let processList: NodeKey;
-    const timeout = this.configService.get<number>('connection.timeout');
-    const symbolSdkExt = new SymbolSdkExt(timeout);
-    while ((processList = nodeKeys.shift()) !== undefined) {
-      // ピア問い合わせ
-      const host = processList.host;
-      const publicKey = processList.publicKey;
-      const isHttps = await symbolSdkExt.isEnableHttps(host);
-      const nodeHttp = new NodeHttp(host, isHttps, timeout);
-      const nodeInfo = await nodeHttp.getNodeInfo();
-      if (nodeInfo && nodeInfo.networkGenerationHashSeed === networkGenerationHashSeed) {
-        // マップにセット
-        const mapKey = [host, publicKey]; // IPのみはhost入ってないパターンがある
-        nodeInfoMap.set(mapKey.toString(), nodeInfo);
-      }
-    }
-  }
-
-  /**
-   * ソケット通信でNodePeers取得（並列処理）
-   * @param networkGenerationHashSeed ネットワークジェネレーションハッシュ
-   * @param nodeKeys ノードキー配列
-   * @param nodePeersMap NodePeersマップ
-   */
-  private async getSoketNodePeersParallel(
-    networkGenerationHashSeed: string,
-    nodeKeys: NodeKey[],
-    nodePeersMap: Map<string, NodePeer[]>,
-  ) {
-    let processList: NodeKey;
-    const timeout = this.configService.get<number>('connection.timeout');
-    while ((processList = nodeKeys.shift()) !== undefined) {
-      // ピア問い合わせ
-      const host = processList.host;
-      const publicKey = processList.publicKey;
-      const port = processList.port;
-      const nodeCat = new NodeCat(host, port, timeout);
-      const nodePeers = await nodeCat.getNodePeers();
-      if (nodePeers) {
-        // マップにセット
-        const mapKey = [host, publicKey]; // IPのみはhost入ってないパターンがある
-        nodePeersMap.set(
-          mapKey.toString(),
-          nodePeers.filter((item) => item.networkGenerationHashSeed === networkGenerationHashSeed),
+      try {
+        // ソケットからピアリスト取得
+        this.logger.debug(`${nodeHost}:${nodePort}`);
+        const socketRepositoryFactory = new RepositoryFactorySocket(
+          nodeHost,
+          nodePort,
+          timeout,
         );
+        let nodeRepo = socketRepositoryFactory.createNodeRepository();
+        let nodePeers = await nodeRepo.getNodePeers();
+        if (nodePeers === undefined) {
+          // ソケットで取得出来ない場合はRestから取得
+          this.logger.debug(`${nodeHost}:${isHttps ? 3001 : 3000}`);
+          const httpRepositoryFactory = new RepositoryFactoryHttp(
+            nodeHost,
+            isHttps,
+            timeout,
+          );
+          nodeRepo = httpRepositoryFactory.createNodeRepository();
+          nodePeers = await nodeRepo.getNodePeers();
+        }
+
+        // 対象のネットワークジェネレーションハッシュのみ取り出す
+        if (nodePeers !== undefined) {
+          nodePeers.filter((item) => {
+            if (item.networkGenerationHashSeed === networkGenerationHashSeed) {
+              return true;
+            }
+            return false;
+          });
+        }
+
+        for (const nodePeer of nodePeers) {
+          const mapKey = [nodePeer.host, nodePeer.publicKey];
+          nodePeersMap.set(mapKey.toString(), nodePeer);
+        }
+      } catch (e) {
+        this.logger.error(e);
       }
     }
   }
 
-  /**
-   * HTTP通信でNodePeers取得（並列処理）
-   * @param networkGenerationHashSeed ネットワークジェネレーションハッシュ
-   * @param nodeKeys ノードキー配列
-   * @param nodePeersMap NodePeersマップ
-   */
-  private async getRestGwNodePeersParallel(
-    networkGenerationHashSeed: string,
-    nodeKeys: NodeKey[],
-    nodePeersMap: Map<string, NodePeer[]>,
-  ) {
-    let processList: NodeKey;
-    const timeout = this.configService.get<number>('connection.timeout');
-    const symbolSdkExt = new SymbolSdkExt(timeout);
-    while ((processList = nodeKeys.shift()) !== undefined) {
-      // ピア問い合わせ
-      const host = processList.host;
-      const publicKey = processList.publicKey;
-      const isHttps = await symbolSdkExt.isEnableHttps(host);
-      const nodeHttp = new NodeHttp(host, isHttps, timeout);
-      const nodePeers = await nodeHttp.getNodePeers();
-      if (nodePeers) {
-        // マップにセット
-        const mapKey = [host, publicKey]; // IPのみはhost入ってないパターンがある
-        nodePeersMap.set(
-          mapKey.toString(),
-          nodePeers.filter((item) => item.networkGenerationHashSeed === networkGenerationHashSeed),
+  private async getNodePeerInfoSet(nodePeers: NodePeer[], timeout: number) {
+    const nodePeerInfos: (NodePeer | NodeInfo)[][] = [];
+
+    for (const nodePeer of nodePeers) {
+      const nodeHost = nodePeer.host;
+      const nodePort = nodePeer.port;
+      const isHttps = await new SymbolSdkExt().isEnableHttps(nodeHost);
+
+      try {
+        // ソケットからノード情報取得
+        this.logger.debug(`${nodeHost}:${nodePort}`);
+        const socketRepositoryFactory = new RepositoryFactorySocket(
+          nodeHost,
+          nodePort,
+          timeout,
         );
+        let nodeRepo = socketRepositoryFactory.createNodeRepository();
+        let nodeInfo = await nodeRepo.getNodeInfo();
+        if (nodeInfo === undefined) {
+          // ソケットで取得出来ない場合はRestから取得
+          this.logger.debug(`${nodeHost}:${isHttps ? 3001 : 3000}`);
+          const httpRepositoryFactory = new RepositoryFactoryHttp(
+            nodeHost,
+            isHttps,
+            timeout,
+          );
+          nodeRepo = httpRepositoryFactory.createNodeRepository();
+          nodeInfo = await nodeRepo.getNodeInfo();
+        }
+        nodePeerInfos.push([nodePeer, nodeInfo]);
+      } catch (e) {
+        this.logger.error(e);
       }
+
+      return nodePeerInfos;
     }
   }
 }

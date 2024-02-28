@@ -16,7 +16,7 @@ export class Chain {
   /**
    * 公開鍵
    */
-  @Prop()
+  @Prop({ required: true })
   publicKey: string;
 
   /**

@@ -25,7 +25,11 @@ export class UnlockedAccount {
   address: string;
 }
 
-export type UnlockedAccountDocument = HydratedDocument<UnlockedAccount, SchemaTimestampsConfig>;
-export const UnlockedAccountSchema = SchemaFactory.createForClass(UnlockedAccount);
+export type UnlockedAccountDocument = HydratedDocument<
+  UnlockedAccount,
+  SchemaTimestampsConfig
+>;
+export const UnlockedAccountSchema =
+  SchemaFactory.createForClass(UnlockedAccount);
 
 UnlockedAccountSchema.index({ host: 1, nodePublicKey: 1 }, { unique: true });

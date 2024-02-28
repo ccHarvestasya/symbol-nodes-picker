@@ -44,7 +44,9 @@ describe('SettingsRepository', () => {
 
   it('登録', async () => {
     /** モック設定 */
-    jest.spyOn(model, 'create').mockImplementationOnce(() => Promise.resolve(mockSetting as any));
+    jest
+      .spyOn(model, 'create')
+      .mockImplementationOnce(() => Promise.resolve(mockSetting as any));
     /** テスト実行 */
     const newDocument = await service.create(mockSetting);
     /** 検証 */

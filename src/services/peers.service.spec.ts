@@ -8,9 +8,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { getModelToken } from '@nestjs/mongoose';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Model } from 'mongoose';
-import { NodeCat, NodeHttp } from 'symbol-sdk-ext';
-import { NodeInfo } from 'symbol-sdk-ext/dist/model/NodeInfo';
-import { NodePeer } from 'symbol-sdk-ext/dist/model/NodePeer';
+import { NodeHttp } from 'symbol-sdk-ext/dist/infrastructure';
+import { NodeInfo, NodePeer } from 'symbol-sdk-ext/dist/model/node';
 
 /**
  * NodePeerモックデータ(Socket)
@@ -21,8 +20,10 @@ mockSocketNodePeer.set(
   [
     {
       version: 16777990,
-      publicKey: '154A2B669BDE15924FF6FEE9ECB9CDD79EEADA4131665748A12132EAA465E575',
-      networkGenerationHashSeed: '49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4',
+      publicKey:
+        '154A2B669BDE15924FF6FEE9ECB9CDD79EEADA4131665748A12132EAA465E575',
+      networkGenerationHashSeed:
+        '49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4',
       roles: 7,
       port: 7900,
       networkIdentifier: 152,
@@ -36,8 +37,10 @@ mockSocketNodePeer.set(
   [
     {
       version: 16777990,
-      publicKey: 'BF61564C09B8A44A940EB09B9D062020A39BA848BAB838D597F27B11F1FBE717',
-      networkGenerationHashSeed: '49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4',
+      publicKey:
+        'BF61564C09B8A44A940EB09B9D062020A39BA848BAB838D597F27B11F1FBE717',
+      networkGenerationHashSeed:
+        '49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4',
       roles: 7,
       port: 7900,
       networkIdentifier: 152,
@@ -51,8 +54,10 @@ mockSocketNodePeer.set(
   [
     {
       version: 16777990,
-      publicKey: '100037D00EC47399FF1883A59A9F4808CA37433D7268926F57E3A1ED981427AA',
-      networkGenerationHashSeed: '49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4',
+      publicKey:
+        '100037D00EC47399FF1883A59A9F4808CA37433D7268926F57E3A1ED981427AA',
+      networkGenerationHashSeed:
+        '49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4',
       roles: 3,
       port: 7900,
       networkIdentifier: 152,
@@ -66,8 +71,10 @@ mockSocketNodePeer.set(
   [
     {
       version: 16777990,
-      publicKey: '1AE10C596BFFF509278A4EA12DAF4B89185ED29EFC6275867502AC7226E794F9',
-      networkGenerationHashSeed: '49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4',
+      publicKey:
+        '1AE10C596BFFF509278A4EA12DAF4B89185ED29EFC6275867502AC7226E794F9',
+      networkGenerationHashSeed:
+        '49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4',
       roles: 3,
       port: 7900,
       networkIdentifier: 152,
@@ -86,8 +93,10 @@ mockRestGwNodePeer.set(
   [
     {
       version: 16777990,
-      publicKey: '154A2B669BDE15924FF6FEE9ECB9CDD79EEADA4131665748A12132EAA465E575',
-      networkGenerationHashSeed: '49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4',
+      publicKey:
+        '154A2B669BDE15924FF6FEE9ECB9CDD79EEADA4131665748A12132EAA465E575',
+      networkGenerationHashSeed:
+        '49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4',
       roles: 7,
       port: 7900,
       networkIdentifier: 152,
@@ -106,14 +115,17 @@ mockSocketNodeInfo.set(
   'sym-test-03.opening-line.jp.test,154A2B669BDE15924FF6FEE9ECB9CDD79EEADA4131665748A12132EAA465E575',
   {
     version: 16777990,
-    publicKey: '154A2B669BDE15924FF6FEE9ECB9CDD79EEADA4131665748A12132EAA465E575',
-    networkGenerationHashSeed: '49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4',
+    publicKey:
+      '154A2B669BDE15924FF6FEE9ECB9CDD79EEADA4131665748A12132EAA465E575',
+    networkGenerationHashSeed:
+      '49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4',
     roles: 7,
     port: 7900,
     networkIdentifier: 152,
     host: 'sym-test-03.opening-line.jp.test',
     friendlyName: 'sym-test-03.opening-line.jp.',
-    nodePublicKey: '85B0EBA30EE575754BD4A424E1244649E37BEC03C9E83F37F3B3A8B2C02F7E36',
+    nodePublicKey:
+      '85B0EBA30EE575754BD4A424E1244649E37BEC03C9E83F37F3B3A8B2C02F7E36',
     isAvailable: true,
     isHttpsEnabled: false,
     certificateExpirationDate: new Date('2024-02-04T21:14:06.072Z'),
@@ -123,14 +135,17 @@ mockSocketNodeInfo.set(
   'sym-test-01.opening-line.jp.test,BF61564C09B8A44A940EB09B9D062020A39BA848BAB838D597F27B11F1FBE717',
   {
     version: 16777990,
-    publicKey: 'BF61564C09B8A44A940EB09B9D062020A39BA848BAB838D597F27B11F1FBE717',
-    networkGenerationHashSeed: '49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4',
+    publicKey:
+      'BF61564C09B8A44A940EB09B9D062020A39BA848BAB838D597F27B11F1FBE717',
+    networkGenerationHashSeed:
+      '49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4',
     roles: 7,
     port: 7900,
     networkIdentifier: 152,
     host: 'sym-test-01.opening-line.jp.test',
     friendlyName: 'sym-test-01.opening-line.jp.',
-    nodePublicKey: 'D8321F96114BE0BB7C2D3D27574A108C00990D6D6F4C604E232A62BFAD247540',
+    nodePublicKey:
+      'D8321F96114BE0BB7C2D3D27574A108C00990D6D6F4C604E232A62BFAD247540',
     isAvailable: true,
     isHttpsEnabled: false,
     certificateExpirationDate: new Date('2024-02-04T21:14:06.072Z'),
@@ -140,14 +155,17 @@ mockSocketNodeInfo.set(
   'testnet.shizuilab.com.test,100037D00EC47399FF1883A59A9F4808CA37433D7268926F57E3A1ED981427AA',
   {
     version: 16777990,
-    publicKey: '100037D00EC47399FF1883A59A9F4808CA37433D7268926F57E3A1ED981427AA',
-    networkGenerationHashSeed: '49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4',
+    publicKey:
+      '100037D00EC47399FF1883A59A9F4808CA37433D7268926F57E3A1ED981427AA',
+    networkGenerationHashSeed:
+      '49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4',
     roles: 3,
     port: 7900,
     networkIdentifier: 152,
     host: 'testnet.shizuilab.com.test',
     friendlyName: 'ibone61@shizuilab',
-    nodePublicKey: 'D8321F96114BE0BB7C2D3D27574A108C00990D6D6F4C604E232A62BFAD247540',
+    nodePublicKey:
+      'D8321F96114BE0BB7C2D3D27574A108C00990D6D6F4C604E232A62BFAD247540',
     isAvailable: true,
     isHttpsEnabled: false,
     certificateExpirationDate: new Date('2024-02-04T21:14:06.072Z'),
@@ -162,14 +180,17 @@ mockRestGwNodeInfo.set(
   'sym-test-03.opening-line.jp.test,154A2B669BDE15924FF6FEE9ECB9CDD79EEADA4131665748A12132EAA465E575',
   {
     version: 16777990,
-    publicKey: '154A2B669BDE15924FF6FEE9ECB9CDD79EEADA4131665748A12132EAA465E575',
-    networkGenerationHashSeed: '49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4',
+    publicKey:
+      '154A2B669BDE15924FF6FEE9ECB9CDD79EEADA4131665748A12132EAA465E575',
+    networkGenerationHashSeed:
+      '49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4',
     roles: 7,
     port: 7900,
     networkIdentifier: 152,
     host: 'sym-test-03.opening-line.jp.test',
     friendlyName: 'sym-test-03.opening-line.jp.',
-    nodePublicKey: '85B0EBA30EE575754BD4A424E1244649E37BEC03C9E83F37F3B3A8B2C02F7E36',
+    nodePublicKey:
+      '85B0EBA30EE575754BD4A424E1244649E37BEC03C9E83F37F3B3A8B2C02F7E36',
     isAvailable: true,
     isHttpsEnabled: true,
   },
@@ -181,13 +202,15 @@ mockRestGwNodeInfo.set(
 const mockFindOne = {
   version: 16777990,
   publicKey: '154A2B669BDE15924FF6FEE9ECB9CDD79EEADA4131665748A12132EAA465E575',
-  networkGenerationHashSeed: '49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4',
+  networkGenerationHashSeed:
+    '49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4',
   roles: 7,
   port: 7900,
   networkIdentifier: 152,
   host: 'sym-test-03.opening-line.jp.test',
   friendlyName: 'sym-test-03.opening-line.jp.',
-  nodePublicKey: '85B0EBA30EE575754BD4A424E1244649E37BEC03C9E83F37F3B3A8B2C02F7E36',
+  nodePublicKey:
+    '85B0EBA30EE575754BD4A424E1244649E37BEC03C9E83F37F3B3A8B2C02F7E36',
   isAvailable: true,
   isHttpsEnabled: false,
   certificateExpirationDate: new Date('2024-02-04T21:14:06.072Z'),
@@ -199,11 +222,13 @@ const mockFindOne = {
 const mockNodePeer = {
   host: '4t.dusanjp.com.test',
   publicKey: '4540B7010550CAA12F78DD3466A2645212F705F39E25A2333E9CB12DFF1A91A0',
-  nodePublicKey: '4F9575A9630EA3546476043FEA8B2A8FEA81E77BAFD9D997B86BDF8908FB2170',
+  nodePublicKey:
+    '4F9575A9630EA3546476043FEA8B2A8FEA81E77BAFD9D997B86BDF8908FB2170',
   port: 7900,
   friendlyName: 'peervoting@4',
   version: 16777990,
-  networkGenerationHashSeed: '49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4',
+  networkGenerationHashSeed:
+    '49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4',
   roles: 5,
   networkIdentifier: 152,
   isHttpsEnabled: false,
@@ -281,14 +306,19 @@ describe('PeersService', () => {
 
   it('registerNewPeer 新しいPeerの登録', async () => {
     /** モック **/
-    jest
-      .spyOn(service, 'getNodePeers')
-      .mockReturnValue({ socket: mockSocketNodePeer, restGw: mockRestGwNodePeer } as any);
-    jest
-      .spyOn(service, 'getNodeInfo')
-      .mockReturnValue({ socket: mockSocketNodeInfo, restGw: mockRestGwNodeInfo } as any);
+    jest.spyOn(service, 'getNodePeers').mockReturnValue({
+      socket: mockSocketNodePeer,
+      restGw: mockRestGwNodePeer,
+    } as any);
+    jest.spyOn(service, 'getNodeInfo').mockReturnValue({
+      socket: mockSocketNodeInfo,
+      restGw: mockRestGwNodeInfo,
+    } as any);
     jest.spyOn(model, 'findOne').mockReturnValue({
-      exec: jest.fn().mockResolvedValueOnce(null).mockResolvedValueOnce(mockFindOne),
+      exec: jest
+        .fn()
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(mockFindOne),
     } as any);
     const updateOneJest = jest.spyOn(model, 'updateOne').mockReturnValue({
       exec: jest.fn().mockImplementationOnce(() => {}),
@@ -301,22 +331,26 @@ describe('PeersService', () => {
     const nodeKeys = [
       {
         host: '4t.dusanjp.com.test',
-        publicKey: '4540B7010550CAA12F78DD3466A2645212F705F39E25A2333E9CB12DFF1A91A0',
+        publicKey:
+          '4540B7010550CAA12F78DD3466A2645212F705F39E25A2333E9CB12DFF1A91A0',
         port: 7900,
       },
       {
         host: '201-sai-dual.symboltest.net.test',
-        publicKey: '645E2E56B5F8680B69BC0255F4930169DBC052BB25F8121055DE2072D37E2C30',
+        publicKey:
+          '645E2E56B5F8680B69BC0255F4930169DBC052BB25F8121055DE2072D37E2C30',
         port: 7900,
       },
       {
         host: 'mikun-testnet.tk.test',
-        publicKey: 'CEAAE51C6D294AEFC1A3C84FEFE9D60B0CE815DBC66567211A41B7DE2DC164B8',
+        publicKey:
+          'CEAAE51C6D294AEFC1A3C84FEFE9D60B0CE815DBC66567211A41B7DE2DC164B8',
         port: 7900,
       },
       {
         host: '001-sai-dual.symboltest.net.test',
-        publicKey: '07D38BAE29464C1F54CC1C8202DD83B65AF21C8E5FF1FB01ACEEE2243C55EF2A',
+        publicKey:
+          '07D38BAE29464C1F54CC1C8202DD83B65AF21C8E5FF1FB01ACEEE2243C55EF2A',
         port: 7900,
       },
     ];
@@ -329,17 +363,21 @@ describe('PeersService', () => {
     expect(updateOneJest.mock.calls.length).toEqual(1);
     expect(updateOneJest.mock.calls[0][0]).toEqual({
       host: 'sym-test-01.opening-line.jp.test',
-      publicKey: 'BF61564C09B8A44A940EB09B9D062020A39BA848BAB838D597F27B11F1FBE717',
+      publicKey:
+        'BF61564C09B8A44A940EB09B9D062020A39BA848BAB838D597F27B11F1FBE717',
     });
     expect(createJest.mock.calls.length).toEqual(3);
     expect(createJest.mock.calls[0][0]).toEqual({
       host: 'sym-test-03.opening-line.jp.test',
-      publicKey: '154A2B669BDE15924FF6FEE9ECB9CDD79EEADA4131665748A12132EAA465E575',
-      nodePublicKey: '85B0EBA30EE575754BD4A424E1244649E37BEC03C9E83F37F3B3A8B2C02F7E36',
+      publicKey:
+        '154A2B669BDE15924FF6FEE9ECB9CDD79EEADA4131665748A12132EAA465E575',
+      nodePublicKey:
+        '85B0EBA30EE575754BD4A424E1244649E37BEC03C9E83F37F3B3A8B2C02F7E36',
       port: 7900,
       friendlyName: 'sym-test-03.opening-line.jp.',
       version: 16777990,
-      networkGenerationHashSeed: '49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4',
+      networkGenerationHashSeed:
+        '49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4',
       roles: 7,
       networkIdentifier: 152,
       isHttpsEnabled: true,
@@ -350,12 +388,15 @@ describe('PeersService', () => {
     });
     expect(createJest.mock.calls[1][0]).toEqual({
       host: 'testnet.shizuilab.com.test',
-      publicKey: '100037D00EC47399FF1883A59A9F4808CA37433D7268926F57E3A1ED981427AA',
-      nodePublicKey: 'D8321F96114BE0BB7C2D3D27574A108C00990D6D6F4C604E232A62BFAD247540',
+      publicKey:
+        '100037D00EC47399FF1883A59A9F4808CA37433D7268926F57E3A1ED981427AA',
+      nodePublicKey:
+        'D8321F96114BE0BB7C2D3D27574A108C00990D6D6F4C604E232A62BFAD247540',
       port: 7900,
       friendlyName: 'ibone61@shizuilab',
       version: 16777990,
-      networkGenerationHashSeed: '49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4',
+      networkGenerationHashSeed:
+        '49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4',
       roles: 3,
       networkIdentifier: 152,
       isHttpsEnabled: false,
@@ -366,11 +407,13 @@ describe('PeersService', () => {
     });
     expect(createJest.mock.calls[2][0]).toEqual({
       host: 'finnel.harvestasya.com',
-      publicKey: '1AE10C596BFFF509278A4EA12DAF4B89185ED29EFC6275867502AC7226E794F9',
+      publicKey:
+        '1AE10C596BFFF509278A4EA12DAF4B89185ED29EFC6275867502AC7226E794F9',
       port: 7900,
       friendlyName: 'HarvestasyaNodeFinnel/.',
       version: 16777990,
-      networkGenerationHashSeed: '49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4',
+      networkGenerationHashSeed:
+        '49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4',
       roles: 3,
       networkIdentifier: 152,
       isHttpsEnabled: false,
@@ -399,45 +442,54 @@ describe('PeersService', () => {
 
   it('NodeInfo取得', async () => {
     // モック
-    jest.spyOn(NodeCat.prototype as any, 'getNodeInfo').mockImplementationOnce(() =>
-      Promise.resolve({
-        host: '4t.dusanjp.com.test',
-        publicKey: '4540B7010550CAA12F78DD3466A2645212F705F39E25A2333E9CB12DFF1A91A0',
-        port: 7900,
-        friendlyName: 'peervoting@4',
-        version: 16777990,
-        networkGenerationHashSeed:
-          '49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4',
-        roles: 5,
-        networkIdentifier: 152,
-        isHttpsEnabled: false,
-        isAvailable: true,
-        certificateExpirationDate: new Date('2025-01-31T23:22:32.000Z'),
-        nodePublicKey: '4F9575A9630EA3546476043FEA8B2A8FEA81E77BAFD9D997B86BDF8908FB2170',
-      }),
-    );
-    jest.spyOn(NodeHttp.prototype as any, 'getNodeInfo').mockImplementationOnce(() =>
-      Promise.resolve({
-        host: '4t.dusanjp.com.test',
-        publicKey: '4540B7010550CAA12F78DD3466A2645212F705F39E25A2333E9CB12DFF1A91A0',
-        port: 7900,
-        friendlyName: 'peervoting@4',
-        version: 16777990,
-        networkGenerationHashSeed:
-          '49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4',
-        roles: 5,
-        networkIdentifier: 152,
-        nodePublicKey: '4F9575A9630EA3546476043FEA8B2A8FEA81E77BAFD9D997B86BDF8908FB2170',
-        isHttpsEnabled: true,
-        isAvailable: true,
-      }),
-    );
+    jest
+      .spyOn(NodeCat.prototype as any, 'getNodeInfo')
+      .mockImplementationOnce(() =>
+        Promise.resolve({
+          host: '4t.dusanjp.com.test',
+          publicKey:
+            '4540B7010550CAA12F78DD3466A2645212F705F39E25A2333E9CB12DFF1A91A0',
+          port: 7900,
+          friendlyName: 'peervoting@4',
+          version: 16777990,
+          networkGenerationHashSeed:
+            '49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4',
+          roles: 5,
+          networkIdentifier: 152,
+          isHttpsEnabled: false,
+          isAvailable: true,
+          certificateExpirationDate: new Date('2025-01-31T23:22:32.000Z'),
+          nodePublicKey:
+            '4F9575A9630EA3546476043FEA8B2A8FEA81E77BAFD9D997B86BDF8908FB2170',
+        }),
+      );
+    jest
+      .spyOn(NodeHttp.prototype as any, 'getNodeInfo')
+      .mockImplementationOnce(() =>
+        Promise.resolve({
+          host: '4t.dusanjp.com.test',
+          publicKey:
+            '4540B7010550CAA12F78DD3466A2645212F705F39E25A2333E9CB12DFF1A91A0',
+          port: 7900,
+          friendlyName: 'peervoting@4',
+          version: 16777990,
+          networkGenerationHashSeed:
+            '49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4',
+          roles: 5,
+          networkIdentifier: 152,
+          nodePublicKey:
+            '4F9575A9630EA3546476043FEA8B2A8FEA81E77BAFD9D997B86BDF8908FB2170',
+          isHttpsEnabled: true,
+          isAvailable: true,
+        }),
+      );
 
     // テスト実行
     const processList = [
       {
         host: '4t.dusanjp.com.test',
-        publicKey: '4540B7010550CAA12F78DD3466A2645212F705F39E25A2333E9CB12DFF1A91A0',
+        publicKey:
+          '4540B7010550CAA12F78DD3466A2645212F705F39E25A2333E9CB12DFF1A91A0',
         port: 7900,
       },
     ];
@@ -449,7 +501,8 @@ describe('PeersService', () => {
       '4t.dusanjp.com.test,4540B7010550CAA12F78DD3466A2645212F705F39E25A2333E9CB12DFF1A91A0',
       {
         version: 16777990,
-        publicKey: '4540B7010550CAA12F78DD3466A2645212F705F39E25A2333E9CB12DFF1A91A0',
+        publicKey:
+          '4540B7010550CAA12F78DD3466A2645212F705F39E25A2333E9CB12DFF1A91A0',
         networkGenerationHashSeed:
           '49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4',
         roles: 5,
@@ -460,7 +513,8 @@ describe('PeersService', () => {
         isHttpsEnabled: false,
         isAvailable: true,
         certificateExpirationDate: new Date('2025-01-31T23:22:32.000Z'),
-        nodePublicKey: '4F9575A9630EA3546476043FEA8B2A8FEA81E77BAFD9D997B86BDF8908FB2170',
+        nodePublicKey:
+          '4F9575A9630EA3546476043FEA8B2A8FEA81E77BAFD9D997B86BDF8908FB2170',
       },
     );
     const restGw = new Map<string, NodeInfo>();
@@ -468,7 +522,8 @@ describe('PeersService', () => {
       '4t.dusanjp.com.test,4540B7010550CAA12F78DD3466A2645212F705F39E25A2333E9CB12DFF1A91A0',
       {
         version: 16777990,
-        publicKey: '4540B7010550CAA12F78DD3466A2645212F705F39E25A2333E9CB12DFF1A91A0',
+        publicKey:
+          '4540B7010550CAA12F78DD3466A2645212F705F39E25A2333E9CB12DFF1A91A0',
         networkGenerationHashSeed:
           '49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4',
         roles: 5,
@@ -478,7 +533,8 @@ describe('PeersService', () => {
         friendlyName: 'peervoting@4',
         isHttpsEnabled: true,
         isAvailable: true,
-        nodePublicKey: '4F9575A9630EA3546476043FEA8B2A8FEA81E77BAFD9D997B86BDF8908FB2170',
+        nodePublicKey:
+          '4F9575A9630EA3546476043FEA8B2A8FEA81E77BAFD9D997B86BDF8908FB2170',
       } as any,
     );
     expect(nodeInfoMap).toEqual({ socket: socket, restGw: restGw });
@@ -486,86 +542,97 @@ describe('PeersService', () => {
 
   it('NodePeers取得', async () => {
     // モック
-    jest.spyOn(NodeCat.prototype as any, 'getNodePeers').mockImplementationOnce(() =>
-      Promise.resolve([
-        {
-          version: 16777989,
-          publicKey: 'E31806D8D180DE025529095E90D792F8C492F628E293C628A2DD8A2312841721',
-          networkGenerationHashSeed:
-            '49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4',
-          roles: 1,
-          port: 7900,
-          networkIdentifier: 152,
-          host: 'onem style',
-          friendlyName: 'onem mobile',
-        },
-        {
-          version: 16777990,
-          publicKey: '645E2E56B5F8680B69BC0255F4930169DBC052BB25F8121055DE2072D37E2C30',
-          networkGenerationHashSeed:
-            '49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4',
-          roles: 3,
-          port: 7900,
-          networkIdentifier: 152,
-          host: '201-sai-dual.symboltest.net.test',
-          friendlyName: '201-sai-dual',
-        },
-        {
-          version: 16777990,
-          publicKey: '04C8854EF30A510916C4E1C2DBA7B180FC3783040F7FD8F53398104802FD55BB',
-          networkGenerationHashSeed:
-            '49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4',
-          roles: 2,
-          port: 7900,
-          networkIdentifier: 152,
-          host: '35.243.113.177.test',
-          friendlyName: '04C8854',
-        },
-      ]),
-    );
-    jest.spyOn(NodeHttp.prototype as any, 'getNodePeers').mockImplementationOnce(() =>
-      Promise.resolve([
-        {
-          version: 16777989,
-          publicKey: 'E31806D8D180DE025529095E90D792F8C492F628E293C628A2DD8A2312841721',
-          networkGenerationHashSeed:
-            '49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4',
-          roles: 1,
-          port: 7900,
-          networkIdentifier: 152,
-          host: 'onem style',
-          friendlyName: 'onem mobile',
-        },
-        {
-          version: 16777990,
-          publicKey: '645E2E56B5F8680B69BC0255F4930169DBC052BB25F8121055DE2072D37E2C30',
-          networkGenerationHashSeed:
-            '49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4',
-          roles: 3,
-          port: 7900,
-          networkIdentifier: 152,
-          host: '201-sai-dual.symboltest.net.test',
-          friendlyName: '201-sai-dual',
-        },
-        {
-          version: 16777990,
-          publicKey: '04C8854EF30A510916C4E1C2DBA7B180FC3783040F7FD8F53398104802FD55BB',
-          networkGenerationHashSeed:
-            '49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4',
-          roles: 2,
-          port: 7900,
-          networkIdentifier: 152,
-          host: '35.243.113.177.test',
-          friendlyName: '04C8854',
-        },
-      ]),
-    );
+    jest
+      .spyOn(NodeCat.prototype as any, 'getNodePeers')
+      .mockImplementationOnce(() =>
+        Promise.resolve([
+          {
+            version: 16777989,
+            publicKey:
+              'E31806D8D180DE025529095E90D792F8C492F628E293C628A2DD8A2312841721',
+            networkGenerationHashSeed:
+              '49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4',
+            roles: 1,
+            port: 7900,
+            networkIdentifier: 152,
+            host: 'onem style',
+            friendlyName: 'onem mobile',
+          },
+          {
+            version: 16777990,
+            publicKey:
+              '645E2E56B5F8680B69BC0255F4930169DBC052BB25F8121055DE2072D37E2C30',
+            networkGenerationHashSeed:
+              '49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4',
+            roles: 3,
+            port: 7900,
+            networkIdentifier: 152,
+            host: '201-sai-dual.symboltest.net.test',
+            friendlyName: '201-sai-dual',
+          },
+          {
+            version: 16777990,
+            publicKey:
+              '04C8854EF30A510916C4E1C2DBA7B180FC3783040F7FD8F53398104802FD55BB',
+            networkGenerationHashSeed:
+              '49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4',
+            roles: 2,
+            port: 7900,
+            networkIdentifier: 152,
+            host: '35.243.113.177.test',
+            friendlyName: '04C8854',
+          },
+        ]),
+      );
+    jest
+      .spyOn(NodeHttp.prototype as any, 'getNodePeers')
+      .mockImplementationOnce(() =>
+        Promise.resolve([
+          {
+            version: 16777989,
+            publicKey:
+              'E31806D8D180DE025529095E90D792F8C492F628E293C628A2DD8A2312841721',
+            networkGenerationHashSeed:
+              '49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4',
+            roles: 1,
+            port: 7900,
+            networkIdentifier: 152,
+            host: 'onem style',
+            friendlyName: 'onem mobile',
+          },
+          {
+            version: 16777990,
+            publicKey:
+              '645E2E56B5F8680B69BC0255F4930169DBC052BB25F8121055DE2072D37E2C30',
+            networkGenerationHashSeed:
+              '49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4',
+            roles: 3,
+            port: 7900,
+            networkIdentifier: 152,
+            host: '201-sai-dual.symboltest.net.test',
+            friendlyName: '201-sai-dual',
+          },
+          {
+            version: 16777990,
+            publicKey:
+              '04C8854EF30A510916C4E1C2DBA7B180FC3783040F7FD8F53398104802FD55BB',
+            networkGenerationHashSeed:
+              '49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4',
+            roles: 2,
+            port: 7900,
+            networkIdentifier: 152,
+            host: '35.243.113.177.test',
+            friendlyName: '04C8854',
+          },
+        ]),
+      );
 
     // テスト実行
     const nodeKeys = [
       {
         host: '4t.dusanjp.com.test',
-        publicKey: '4540B7010550CAA12F78DD3466A2645212F705F39E25A2333E9CB12DFF1A91A0',
+        publicKey:
+          '4540B7010550CAA12F78DD3466A2645212F705F39E25A2333E9CB12DFF1A91A0',
         port: 7900,
       },
     ];
@@ -581,7 +648,8 @@ describe('PeersService', () => {
       [
         {
           version: 16777989,
-          publicKey: 'E31806D8D180DE025529095E90D792F8C492F628E293C628A2DD8A2312841721',
+          publicKey:
+            'E31806D8D180DE025529095E90D792F8C492F628E293C628A2DD8A2312841721',
           networkGenerationHashSeed:
             '49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4',
           roles: 1,
@@ -592,7 +660,8 @@ describe('PeersService', () => {
         },
         {
           version: 16777990,
-          publicKey: '645E2E56B5F8680B69BC0255F4930169DBC052BB25F8121055DE2072D37E2C30',
+          publicKey:
+            '645E2E56B5F8680B69BC0255F4930169DBC052BB25F8121055DE2072D37E2C30',
           networkGenerationHashSeed:
             '49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4',
           roles: 3,
@@ -603,7 +672,8 @@ describe('PeersService', () => {
         },
         {
           version: 16777990,
-          publicKey: '04C8854EF30A510916C4E1C2DBA7B180FC3783040F7FD8F53398104802FD55BB',
+          publicKey:
+            '04C8854EF30A510916C4E1C2DBA7B180FC3783040F7FD8F53398104802FD55BB',
           networkGenerationHashSeed:
             '49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4',
           roles: 2,
@@ -620,7 +690,8 @@ describe('PeersService', () => {
       [
         {
           version: 16777989,
-          publicKey: 'E31806D8D180DE025529095E90D792F8C492F628E293C628A2DD8A2312841721',
+          publicKey:
+            'E31806D8D180DE025529095E90D792F8C492F628E293C628A2DD8A2312841721',
           networkGenerationHashSeed:
             '49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4',
           roles: 1,
@@ -631,7 +702,8 @@ describe('PeersService', () => {
         },
         {
           version: 16777990,
-          publicKey: '645E2E56B5F8680B69BC0255F4930169DBC052BB25F8121055DE2072D37E2C30',
+          publicKey:
+            '645E2E56B5F8680B69BC0255F4930169DBC052BB25F8121055DE2072D37E2C30',
           networkGenerationHashSeed:
             '49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4',
           roles: 3,
@@ -642,7 +714,8 @@ describe('PeersService', () => {
         },
         {
           version: 16777990,
-          publicKey: '04C8854EF30A510916C4E1C2DBA7B180FC3783040F7FD8F53398104802FD55BB',
+          publicKey:
+            '04C8854EF30A510916C4E1C2DBA7B180FC3783040F7FD8F53398104802FD55BB',
           networkGenerationHashSeed:
             '49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4',
           roles: 2,

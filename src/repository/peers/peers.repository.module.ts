@@ -4,7 +4,9 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 
 @Module({
-  imports: [MongooseModule.forFeature([{ name: Peer.name, schema: PeerSchema }])],
+  imports: [
+    MongooseModule.forFeature([{ name: Peer.name, schema: PeerSchema }]),
+  ],
   controllers: [],
   providers: [PeersRepository],
   exports: [PeersRepository],

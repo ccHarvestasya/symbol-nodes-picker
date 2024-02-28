@@ -7,11 +7,13 @@ import { Model } from 'mongoose';
 const mockPeer = {
   host: 'vmi831828.contaboserver.net',
   publicKey: '24A1C604DAAB6D23CE19BD00FF272A87382B019ADDEA99193F15E469B5646080',
-  nodePublicKey: '2A2F4374C68D2C516E6FE9FFB42FD151DB8968556D06C6CF1D1150A38FF43670',
+  nodePublicKey:
+    '2A2F4374C68D2C516E6FE9FFB42FD151DB8968556D06C6CF1D1150A38FF43670',
   port: 7900,
   friendlyName: 'MAMESHIBA',
   version: 16777990,
-  networkGenerationHashSeed: '49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4',
+  networkGenerationHashSeed:
+    '49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4',
   roles: 3,
   networkIdentifier: 152,
   isHttpsEnabled: true,
@@ -28,11 +30,13 @@ describe('PeersRepository', () => {
   const peersArray = [
     {
       host: '4t.dusanjp.com',
-      publicKey: '4540B7010550CAA12F78DD3466A2645212F705F39E25A2333E9CB12DFF1A91A0',
+      publicKey:
+        '4540B7010550CAA12F78DD3466A2645212F705F39E25A2333E9CB12DFF1A91A0',
       port: 7900,
       friendlyName: 'peervoting@4',
       version: 16777990,
-      networkGenerationHashSeed: '49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4',
+      networkGenerationHashSeed:
+        '49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4',
       roles: 5,
       networkIdentifier: 152,
       createdAt: '2024-01-23T22:25:24.125Z',
@@ -40,11 +44,13 @@ describe('PeersRepository', () => {
     },
     {
       host: 'vmi831828.contaboserver.net',
-      publicKey: '24A1C604DAAB6D23CE19BD00FF272A87382B019ADDEA99193F15E469B5646080',
+      publicKey:
+        '24A1C604DAAB6D23CE19BD00FF272A87382B019ADDEA99193F15E469B5646080',
       port: 7900,
       friendlyName: 'MAMESHIBA',
       version: 16777990,
-      networkGenerationHashSeed: '49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4',
+      networkGenerationHashSeed:
+        '49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4',
       roles: 3,
       networkIdentifier: 152,
       createdAt: '2024-01-23T22:25:24.126Z',
@@ -98,8 +104,10 @@ describe('PeersRepository', () => {
     jest.spyOn(model, 'create').mockImplementationOnce(() =>
       Promise.resolve({
         host: 'vmi831828.contaboserver.net',
-        publicKey: '24A1C604DAAB6D23CE19BD00FF272A87382B019ADDEA99193F15E469B5646080',
-        nodePublicKey: '2A2F4374C68D2C516E6FE9FFB42FD151DB8968556D06C6CF1D1150A38FF43670',
+        publicKey:
+          '24A1C604DAAB6D23CE19BD00FF272A87382B019ADDEA99193F15E469B5646080',
+        nodePublicKey:
+          '2A2F4374C68D2C516E6FE9FFB42FD151DB8968556D06C6CF1D1150A38FF43670',
         port: 7900,
         friendlyName: 'MAMESHIBA',
         version: 16777990,
@@ -116,12 +124,15 @@ describe('PeersRepository', () => {
     );
     const newCat = await service.create({
       host: 'vmi831828.contaboserver.net',
-      publicKey: '24A1C604DAAB6D23CE19BD00FF272A87382B019ADDEA99193F15E469B5646080',
-      nodePublicKey: '2A2F4374C68D2C516E6FE9FFB42FD151DB8968556D06C6CF1D1150A38FF43670',
+      publicKey:
+        '24A1C604DAAB6D23CE19BD00FF272A87382B019ADDEA99193F15E469B5646080',
+      nodePublicKey:
+        '2A2F4374C68D2C516E6FE9FFB42FD151DB8968556D06C6CF1D1150A38FF43670',
       port: 7900,
       friendlyName: 'MAMESHIBA',
       version: 16777990,
-      networkGenerationHashSeed: '49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4',
+      networkGenerationHashSeed:
+        '49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4',
       roles: 3,
       networkIdentifier: 152,
       isHttpsEnabled: true,

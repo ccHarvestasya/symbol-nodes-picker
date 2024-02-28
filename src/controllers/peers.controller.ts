@@ -1,6 +1,7 @@
-import { NodeKey, PeersService } from '@/services/peers.service';
+import { PeersService } from '@/services/peers.service';
 import { Controller, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
+import { NodeInfo, NodePeer } from 'symbol-sdk-ext/dist/model/node';
 
 /**
  * Peers コントローラ
@@ -16,41 +17,58 @@ export class PeersController {
 
   @Cron('0 */10 * * * *')
   async registerNewNodePeer() {
-    const methodName = 'getTest';
+    const methodName = 'registerNewNodePeer';
     this.logger.verbose('start - ' + methodName);
 
-    /** Peersコレクション取得 */
     // Peersコレクションからチェック日時が古い方から取得
     const peerDocs = await this.peersService.getPeerDocCheckedOldest();
-    const nodeKeys: NodeKey[] = [];
-    for (const peerDoc of peerDocs) {
-      const nodeKey = new NodeKey();
-      nodeKey.host = peerDoc.host;
-      nodeKey.publicKey = peerDoc.publicKey;
-      nodeKey.port = peerDoc.port;
-      nodeKeys.push(nodeKey);
-    }
-
     // ジェネレーションハッシュシード
-    const nghs = await this.peersService.getNetworkGenerationHashSeed();
-    // 新しいPeerの登録
-    this.peersService.registerNewPeer(nghs, nodeKeys);
+    const networkGenerationHashSeed =
+      await this.peersService.getNetworkGenerationHashSeed();
+    // /node/peersリストマップ取得
+    const nodePeersMap = await this.peersService.getNodePeersMap(
+      peerDocs,
+      networkGenerationHashSeed,
+    );
+
+    // /node/info取得
+    const nodePeerInfos =
+      await this.peersService.getNodePeerInfos(nodePeersMap);
+    for (const nodePeerInfo of nodePeerInfos) {
+      // Peersコレクション登録/更新
+      this.logger.debug(`update peers: ${nodePeerInfo[0]?.host}`);
+      this.peersService.updatePeerInfo(
+        nodePeerInfo[0] as NodePeer,
+        nodePeerInfo[1] as NodeInfo,
+      );
+    }
 
     this.logger.verbose(' end  - ' + methodName);
   }
 
   // @Get()
-  // async getPeer2peer(): Promise<void> {
-  //   const methodName = 'getPeer2peer';
+  // async getTest(): Promise<void> {
+  //   const methodName = 'getTest';
   //   this.logger.verbose('start - ' + methodName);
 
-  //   await this.peer2peerService.registerNewPeer();
+  //   // Peersコレクションからチェック日時が古い方から取得
+  //   const peerDocs = await this.peersService.getPeerDocCheckedOldest();
+  //   // ジェネレーションハッシュシード
+  //   const networkGenerationHashSeed = await this.peersService.getNetworkGenerationHashSeed();
+  //   // /node/peersリストマップ取得
+  //   const nodePeersMap = await this.peersService.getNodePeersMap(
+  //     peerDocs,
+  //     networkGenerationHashSeed,
+  //   );
 
-  //   this.logger.verbose(' end  - ' + methodName);
-  // }
-
-  //   @Cron(CronExpression.EVERY_30_SECONDS)
-  //   handleCron() {
-  //     this.logger.debug('Called every 30 seconds');
+  //   // /node/info取得
+  //   const nodePeerInfos = await this.peersService.getNodePeerInfos(nodePeersMap);
+  //   for (const nodePeerInfo of nodePeerInfos) {
+  //     // Peersコレクション登録/更新
+  //     this.logger.debug(`update peers: ${nodePeerInfo[0]?.host}`);
+  //     this.peersService.updatePeerInfo(nodePeerInfo[0] as NodePeer, nodePeerInfo[1] as NodeInfo);
   //   }
+
+  //   this.logger.verbose('e n d - ' + methodName);
+  // }
 }

@@ -4,7 +4,11 @@ import { SettingCreateDto } from '@/repository/settings/dto/settingCreateDto';
 import { SettingsRepository } from '@/repository/settings/settings.repository';
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { NodeHttp, SymbolSdkExt } from 'symbol-sdk-ext';
+import {
+  RepositoryFactoryHttp,
+  RepositoryFactorySocket,
+  SymbolSdkExt,
+} from 'symbol-sdk-ext';
 
 @Injectable()
 export class AppService {
@@ -35,37 +39,67 @@ export class AppService {
 
     // Peerコレクションから1件取得
     const peersDoc = await this.peersRepository.findOne();
+
     if (!peersDoc) {
-      this.logger.debug('コレクションが存在しません。初期データを読み込みます。');
-      let networkGenerationHashSeed = '';
+      this.logger.log('コレクションが存在しません。初期データを読み込みます。');
+
       // 設定から初期ノードホストを取得
-      const initNodeHosts = this.configService.get<string[]>('connection.init-host');
-      // ノード情報登録
+      const initNodeHosts = this.configService.get<string[]>(
+        'connection.init-host',
+      );
+      // 設定からタイムアウトを取得
       const timeout = this.configService.get<number>('connection.timeout');
+
+      let networkGenerationHashSeed = '';
+      // ノード情報登録
       for (const initNodeHost of initNodeHosts) {
         const symbolSdkExt = new SymbolSdkExt(timeout);
         const isHttps = await symbolSdkExt.isEnableHttps(initNodeHost);
-        const nodeHttp = new NodeHttp(initNodeHost, isHttps, timeout);
-        const nodeInfo = await nodeHttp.getNodeInfo();
-        if (nodeInfo) {
-          const peerCreateDto = new PeerCreateDto();
-          peerCreateDto.host = nodeInfo.host;
-          peerCreateDto.publicKey = nodeInfo.publicKey;
-          peerCreateDto.nodePublicKey = nodeInfo.nodePublicKey;
-          peerCreateDto.port = nodeInfo.port;
-          peerCreateDto.friendlyName = nodeInfo.friendlyName;
-          peerCreateDto.version = nodeInfo.version;
-          peerCreateDto.networkGenerationHashSeed = nodeInfo.networkGenerationHashSeed;
-          peerCreateDto.roles = nodeInfo.roles;
-          peerCreateDto.networkIdentifier = nodeInfo.networkIdentifier;
-          peerCreateDto.isHttpsEnabled = nodeInfo.isHttpsEnabled;
-          peerCreateDto.certificateExpirationDate = nodeInfo.certificateExpirationDate;
-          peerCreateDto.isAvailable = true;
-          peerCreateDto.lastCheck = new Date();
-          peerCreateDto.lastSyncCheck = new Date();
-          await this.peersRepository.create(peerCreateDto);
-          // ジェネレーションハッシュシード退避
-          networkGenerationHashSeed = nodeInfo.networkGenerationHashSeed;
+        // ソケットでノード情報取得
+        const socketRepositoryFactory = new RepositoryFactorySocket(
+          initNodeHost,
+          7900,
+          timeout,
+        );
+        let nodeRepo = socketRepositoryFactory.createNodeRepository();
+        let nodeInfo = await nodeRepo.getNodeInfo();
+        if (!nodeInfo) {
+          // ソケットで取得出来ない場合はRestから取得
+          const httpRepositoryFactory = new RepositoryFactoryHttp(
+            initNodeHost,
+            isHttps,
+            timeout,
+          );
+          nodeRepo = httpRepositoryFactory.createNodeRepository();
+          nodeInfo = await nodeRepo.getNodeInfo();
+        }
+
+        try {
+          if (nodeInfo) {
+            const peerCreateDto = new PeerCreateDto();
+            peerCreateDto.host = initNodeHost;
+            peerCreateDto.publicKey = nodeInfo.publicKey;
+            peerCreateDto.nodePublicKey = nodeInfo.nodePublicKey;
+            peerCreateDto.port = nodeInfo.port;
+            peerCreateDto.friendlyName = nodeInfo.friendlyName;
+            peerCreateDto.version = nodeInfo.version;
+            peerCreateDto.networkGenerationHashSeed =
+              nodeInfo.networkGenerationHashSeed;
+            peerCreateDto.roles = nodeInfo.roles;
+            peerCreateDto.networkIdentifier = nodeInfo.networkIdentifier;
+            peerCreateDto.isHttpsEnabled = isHttps;
+            peerCreateDto.certificateExpirationDate =
+              nodeInfo.certificateExpirationDate;
+            peerCreateDto.isAvailable = true;
+            peerCreateDto.lastCheck = new Date();
+            peerCreateDto.lastSyncCheck = new Date();
+
+            await this.peersRepository.create(peerCreateDto);
+            // ジェネレーションハッシュシード退避
+            networkGenerationHashSeed = nodeInfo.networkGenerationHashSeed;
+          }
+        } catch (e) {
+          this.logger.error(e);
         }
       }
 
@@ -76,41 +110,6 @@ export class AppService {
       await this.settingsRepository.create(settingCreateDto);
     }
 
-    this.logger.verbose(' end  - ' + methodName);
+    this.logger.verbose('e n d - ' + methodName);
   }
-
-  // async registerPeer2Peers() {
-  //   const methodName = 'registerPeer2Peers';
-  //   this.logger.verbose('start - ' + methodName);
-
-  //   const sslScoket = new SslSocket();
-  //   await sslScoket.getNodeInfo('symbol02.harvestasya.com', 7900);
-
-  //   //   // リクエスト上限まで取得
-  //   //   const peersDocs = await this.peersRepository.findLimit(
-  //   //     new PeersFindDto(),
-  //   //     this.configService.get<number>('request-count'),
-  //   //   );
-
-  //   //   // チャンク数
-  //   //   const chunk =
-  //   //     peersDocs.length < this.configService.get<number>('request-chunk')
-  //   //       ? peersDocs.length
-  //   //       : this.configService.get<number>('request-chunk');
-
-  //   //   // チャンク数分並列処理
-  //   //   const promises: Promise<void>[] = [];
-  //   //   for (let i = 0; i < chunk; i++) {
-  //   //     promises.push(this.getNodePeers(peers));
-  //   //   }
-  //   //   await Promise.all(promises);
-
-  //   this.logger.verbose(' end  - ' + methodName);
-  // }
-
-  getHello(): string {
-    return 'Hello World!';
-  }
-
-  // private async registerPeer2PeersParallel() {}
 }
