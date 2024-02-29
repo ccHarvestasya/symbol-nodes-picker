@@ -13,13 +13,8 @@ import {
   RepositoryFactorySocket,
   SymbolSdkExt,
 } from 'symbol-sdk-ext';
+import { Listener } from 'symbol-sdk-ext/dist/infrastructure';
 import { NodeInfo, NodePeer } from 'symbol-sdk-ext/dist/model/node';
-
-export class NodeKey {
-  host: string;
-  publicKey: string;
-  port: number;
-}
 
 /**
  * Peersサービス
@@ -42,6 +37,12 @@ export class PeersService {
     private readonly peersRepository: PeersRepository,
   ) {}
 
+  /**
+   * NodePeersマップ取得
+   * @param peerDocs Peerドキュメント
+   * @param networkGenerationHashSeed ネットワークジェネレーションハッシュ
+   * @returns NodePeersマップ
+   */
   async getNodePeersMap(
     peerDocs: PeerDocument[],
     networkGenerationHashSeed: string,
@@ -85,6 +86,11 @@ export class PeersService {
     return nodePeersMap;
   }
 
+  /**
+   * NodePeerとNodeInfoのセットを取得
+   * @param nodePeersMap NodePeersマップ
+   * @returns NodePeerとNodeInfoのセット
+   */
   async getNodePeerInfos(nodePeersMap: Map<string, NodePeer>) {
     // マップを配列に変換
     const nodePeers: NodePeer[] = [...nodePeersMap.values()];
@@ -115,11 +121,16 @@ export class PeersService {
     for (let i = 0; i < chunk; i++) {
       nodeInfoPromises.push(this.getNodePeerInfoSet(processesList[i], timeout));
     }
-    const nodePeerInfos = (await Promise.all(nodeInfoPromises)).flat();
+    const nodePeerInfos = await Promise.all(nodeInfoPromises);
 
-    return nodePeerInfos;
+    return nodePeerInfos.flat();
   }
 
+  /**
+   * Peerコレクション更新
+   * @param nodePeer NodePeer
+   * @param nodeInfo NodeInfo
+   */
   async updatePeerInfo(nodePeer: NodePeer, nodeInfo: NodeInfo | undefined) {
     try {
       // Peersコレクション存在チェック
@@ -140,8 +151,10 @@ export class PeersService {
           nodePeer.networkGenerationHashSeed;
         peerCreateDto.roles = nodePeer.roles;
         peerCreateDto.networkIdentifier = nodePeer.networkIdentifier;
-        peerCreateDto.isAvailable = false;
         peerCreateDto.isHttpsEnabled = false;
+        peerCreateDto.isAvailable = false;
+        peerCreateDto.isWsAvailable = false;
+        peerCreateDto.isWssAvailable = false;
         peerCreateDto.lastCheck = new Date();
         peerCreateDto.lastSyncCheck = new Date();
         if (nodeInfo !== undefined) {
@@ -159,6 +172,17 @@ export class PeersService {
           peerCreateDto.certificateExpirationDate =
             nodeInfo?.certificateExpirationDate;
           peerCreateDto.isAvailable = true;
+          peerCreateDto.isWsAvailable = await new Listener(
+            nodePeer.host,
+          ).isWebsokectAvailable();
+          peerCreateDto.isWssAvailable = false;
+          if (peerCreateDto.isHttpsEnabled) {
+            peerCreateDto.isWssAvailable = await new Listener(
+              nodePeer.host,
+              true,
+              false,
+            ).isWebsokectAvailable();
+          }
         }
         await this.peersRepository.create(peerCreateDto);
       } else {
@@ -172,8 +196,10 @@ export class PeersService {
           nodePeer.networkGenerationHashSeed;
         updateDto.roles = nodePeer.roles;
         updateDto.networkIdentifier = nodePeer.networkIdentifier;
-        updateDto.isAvailable = false;
         updateDto.isHttpsEnabled = false;
+        updateDto.isAvailable = false;
+        updateDto.isWsAvailable = false;
+        updateDto.isWssAvailable = false;
         updateDto.lastCheck = new Date();
         updateDto.lastSyncCheck = new Date();
         if (nodeInfo !== undefined) {
@@ -191,11 +217,22 @@ export class PeersService {
           updateDto.certificateExpirationDate =
             nodeInfo?.certificateExpirationDate;
           updateDto.isAvailable = true;
+          updateDto.isWsAvailable = await new Listener(
+            nodePeer.host,
+          ).isWebsokectAvailable();
+          updateDto.isWssAvailable = false;
+          if (updateDto.isHttpsEnabled) {
+            updateDto.isWssAvailable = await new Listener(
+              nodePeer.host,
+              true,
+              false,
+            ).isWebsokectAvailable();
+          }
         }
         await this.peersRepository.updateOne(keyDto, updateDto);
       }
     } catch (e) {
-      this.logger.error(e);
+      this.logger.error(`updatePeerInfo: ${e}`);
     }
   }
 
@@ -222,6 +259,13 @@ export class PeersService {
     return settingDoc.value;
   }
 
+  /**
+   * /node/peers取得
+   * @param peerDocs Peerドキュメント
+   * @param timeout タイムアウト
+   * @param networkGenerationHashSeed ネットワークジェネレーションハッシュシード
+   * @param nodePeersMap NodePeersマップ
+   */
   private async getNodePeers(
     peerDocs: PeerDocument[],
     timeout: number,
@@ -235,7 +279,6 @@ export class PeersService {
 
       try {
         // ソケットからピアリスト取得
-        this.logger.debug(`${nodeHost}:${nodePort}`);
         const socketRepositoryFactory = new RepositoryFactorySocket(
           nodeHost,
           nodePort,
@@ -243,9 +286,11 @@ export class PeersService {
         );
         let nodeRepo = socketRepositoryFactory.createNodeRepository();
         let nodePeers = await nodeRepo.getNodePeers();
-        if (nodePeers === undefined) {
+        if (nodePeers !== undefined) {
+          this.logger.log(`[OK] ${nodeHost}:${nodePort}/node/peers`);
+        } else {
           // ソケットで取得出来ない場合はRestから取得
-          this.logger.debug(`${nodeHost}:${isHttps ? 3001 : 3000}`);
+          this.logger.warn(`[NG] ${nodeHost}:${nodePort}/node/peers`);
           const httpRepositoryFactory = new RepositoryFactoryHttp(
             nodeHost,
             isHttps,
@@ -253,21 +298,30 @@ export class PeersService {
           );
           nodeRepo = httpRepositoryFactory.createNodeRepository();
           nodePeers = await nodeRepo.getNodePeers();
+          if (nodePeers !== undefined) {
+            this.logger.log(
+              `[OK] ${nodeHost}:${isHttps ? 3001 : 3000}/node/peers`,
+            );
+          } else {
+            this.logger.warn(
+              `[NG] ${nodeHost}:${isHttps ? 3001 : 3000}/node/peers`,
+            );
+          }
         }
 
         // 対象のネットワークジェネレーションハッシュのみ取り出す
         if (nodePeers !== undefined) {
-          nodePeers.filter((item) => {
+          nodePeers = nodePeers.filter((item) => {
             if (item.networkGenerationHashSeed === networkGenerationHashSeed) {
               return true;
             }
             return false;
           });
-        }
 
-        for (const nodePeer of nodePeers) {
-          const mapKey = [nodePeer.host, nodePeer.publicKey];
-          nodePeersMap.set(mapKey.toString(), nodePeer);
+          for (const nodePeer of nodePeers) {
+            const mapKey = [nodePeer.host, nodePeer.publicKey];
+            nodePeersMap.set(mapKey.toString(), nodePeer);
+          }
         }
       } catch (e) {
         this.logger.error(e);
@@ -275,6 +329,12 @@ export class PeersService {
     }
   }
 
+  /**
+   * NodePeerとNodeInfoのセット取得
+   * @param nodePeers NodePeer配列
+   * @param timeout タイムアウト
+   * @returns NodePeerとNodeInfoのセット
+   */
   private async getNodePeerInfoSet(nodePeers: NodePeer[], timeout: number) {
     const nodePeerInfos: (NodePeer | NodeInfo)[][] = [];
 
@@ -285,7 +345,6 @@ export class PeersService {
 
       try {
         // ソケットからノード情報取得
-        this.logger.debug(`${nodeHost}:${nodePort}`);
         const socketRepositoryFactory = new RepositoryFactorySocket(
           nodeHost,
           nodePort,
@@ -293,9 +352,11 @@ export class PeersService {
         );
         let nodeRepo = socketRepositoryFactory.createNodeRepository();
         let nodeInfo = await nodeRepo.getNodeInfo();
-        if (nodeInfo === undefined) {
+        if (nodeInfo !== undefined) {
+          this.logger.log(`[OK] ${nodeHost}:${nodePort}/node/info`);
+        } else {
           // ソケットで取得出来ない場合はRestから取得
-          this.logger.debug(`${nodeHost}:${isHttps ? 3001 : 3000}`);
+          this.logger.warn(`[NG] ${nodeHost}:${nodePort}/node/info`);
           const httpRepositoryFactory = new RepositoryFactoryHttp(
             nodeHost,
             isHttps,
@@ -303,13 +364,22 @@ export class PeersService {
           );
           nodeRepo = httpRepositoryFactory.createNodeRepository();
           nodeInfo = await nodeRepo.getNodeInfo();
+          if (nodeInfo !== undefined) {
+            this.logger.log(
+              `[OK] ${nodeHost}:${isHttps ? 3001 : 3000}/node/info`,
+            );
+          } else {
+            this.logger.log(
+              `[NG] ${nodeHost}:${isHttps ? 3001 : 3000}/node/info`,
+            );
+          }
         }
         nodePeerInfos.push([nodePeer, nodeInfo]);
       } catch (e) {
         this.logger.error(e);
       }
-
-      return nodePeerInfos;
     }
+
+    return nodePeerInfos;
   }
 }

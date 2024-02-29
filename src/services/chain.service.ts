@@ -34,9 +34,6 @@ export class ChainService {
    * @param peerDocs Peerドキュメント
    */
   async updateChainCollection(peerDocs: PeerDocument[]) {
-    const methodName = 'registerNewPeer';
-    this.logger.verbose('start - ' + methodName);
-
     // 設定からタイムアウトを取得
     const timeout = this.configService.get<number>('connection.timeout');
 
@@ -66,8 +63,6 @@ export class ChainService {
       );
     }
     await Promise.all(chainInfoPromises);
-
-    this.logger.verbose('e n d - ' + methodName);
   }
 
   /**
@@ -83,7 +78,6 @@ export class ChainService {
 
       try {
         // ソケットからピアリスト取得
-        this.logger.debug(`${nodeHost}:${nodePort}`);
         const socketRepositoryFactory = new RepositoryFactorySocket(
           nodeHost,
           nodePort,
@@ -91,9 +85,11 @@ export class ChainService {
         );
         let chainRepo = socketRepositoryFactory.createChainRepository();
         let chainInfo = await chainRepo.getChainInfo();
-        if (chainInfo === undefined) {
+        if (chainInfo !== undefined) {
+          this.logger.log(`[OK] ${nodeHost}:${nodePort}/chain/info`);
+        } else if (chainInfo === undefined) {
           // ソケットで取得出来ない場合はRestから取得
-          this.logger.debug(`${nodeHost}:${isHttps ? 3001 : 3000}`);
+          this.logger.warn(`[NG] ${nodeHost}:${nodePort}/chain/info`);
           const httpRepositoryFactory = new RepositoryFactoryHttp(
             nodeHost,
             isHttps,
@@ -101,6 +97,15 @@ export class ChainService {
           );
           chainRepo = httpRepositoryFactory.createChainRepository();
           chainInfo = await chainRepo.getChainInfo();
+          if (chainInfo !== undefined) {
+            this.logger.log(
+              `[OK] ${nodeHost}:${isHttps ? 3001 : 3000}/chain/info`,
+            );
+          } else {
+            this.logger.warn(
+              `[NG] ${nodeHost}:${isHttps ? 3001 : 3000}/chain/info`,
+            );
+          }
         }
         // 更新
         if (chainInfo !== undefined) {

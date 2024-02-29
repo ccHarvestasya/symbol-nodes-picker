@@ -80,6 +80,18 @@ export class Peer {
   isAvailable: boolean;
 
   /**
+   * WebSocket利用可否
+   */
+  @Prop()
+  isWsAvailable: boolean;
+
+  /**
+   * WebSocket(SSL)利用可否
+   */
+  @Prop()
+  isWssAvailable: boolean;
+
+  /**
    * チェック日時
    */
   @Prop()

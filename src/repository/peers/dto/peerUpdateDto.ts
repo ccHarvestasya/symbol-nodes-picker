@@ -50,6 +50,16 @@ export class PeerUpdateDto {
   isAvailable: boolean;
 
   /**
+   * WebSocket利用可否
+   */
+  isWsAvailable: boolean;
+
+  /**
+   * WebSocket(SSL)利用可否
+   */
+  isWssAvailable: boolean;
+
+  /**
    * チェック日時
    */
   lastCheck: Date;
