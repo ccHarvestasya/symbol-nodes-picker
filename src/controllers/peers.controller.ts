@@ -36,7 +36,6 @@ export class PeersController {
       await this.peersService.getNodePeerInfos(nodePeersMap);
     for (const nodePeerInfo of nodePeerInfos) {
       // Peersコレクション登録/更新
-      this.logger.debug(`update peers: ${nodePeerInfo[0]?.host}`);
       this.peersService.updatePeerInfo(
         nodePeerInfo[0] as NodePeer,
         nodePeerInfo[1] as NodeInfo,
