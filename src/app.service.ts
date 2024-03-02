@@ -1,4 +1,4 @@
-import { PeerCreateDto } from '@/repository/peers/dto/peerCreateDto';
+import { PeersCreateDto } from '@/repository/peers/dto/peersCreateDto';
 import { PeersRepository } from '@/repository/peers/peers.repository';
 import { SettingCreateDto } from '@/repository/settings/dto/settingCreateDto';
 import { SettingsRepository } from '@/repository/settings/settings.repository';
@@ -76,7 +76,7 @@ export class AppService {
 
         try {
           if (nodeInfo) {
-            const peerCreateDto = new PeerCreateDto();
+            const peerCreateDto = new PeersCreateDto();
             peerCreateDto.host = initNodeHost;
             peerCreateDto.publicKey = nodeInfo.publicKey;
             peerCreateDto.nodePublicKey = nodeInfo.nodePublicKey;
@@ -87,12 +87,8 @@ export class AppService {
               nodeInfo.networkGenerationHashSeed;
             peerCreateDto.roles = nodeInfo.roles;
             peerCreateDto.networkIdentifier = nodeInfo.networkIdentifier;
-            peerCreateDto.isHttpsEnabled = isHttps;
             peerCreateDto.certificateExpirationDate =
               nodeInfo.certificateExpirationDate;
-            peerCreateDto.isAvailable = true;
-            peerCreateDto.lastCheck = new Date();
-            peerCreateDto.lastSyncCheck = new Date();
 
             await this.peersRepository.create(peerCreateDto);
             // ジェネレーションハッシュシード退避

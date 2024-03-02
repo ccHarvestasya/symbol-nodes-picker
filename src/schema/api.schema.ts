@@ -15,24 +15,67 @@ export class Api {
   /**
    * 公開鍵
    */
-  @Prop()
+  @Prop({ required: true })
   publicKey: string;
+
+  /**
+   * RESTゲートウェイURL
+   */
+  @Prop()
+  restGatewayUrl: string;
+
+  /**
+   * HTTPs利用可否
+   */
+  @Prop()
+  isHttpsEnabled: boolean;
+
+  /**
+   * ハーベスター数
+   */
+  @Prop()
+  harvesters: number;
 
   /**
    * WebSocket
    */
   @Prop(
     raw({
+      /**
+       * 利用可否
+       */
       isAvailable: { type: Boolean },
-      isHttpsEnabled: { type: Boolean },
+
+      /**
+       * WebSocket(SSL)利用可否
+       */
+      wss: { type: Boolean },
+
+      /**
+       * WebSocketURL
+       */
+      url: { type: String },
     }),
   )
-  websocket: Record<string, any>;
+  webSocket: Record<string, any>;
 
   /**
-   * ネットワークプロパティ死活
+   * Api利用可否
    */
-  isNetworkPropertiesAvailable: boolean;
+  @Prop()
+  isAvailable: boolean;
+
+  /**
+   * 1ページ毎のトランザクション検索数
+   */
+  @Prop()
+  txSearchCountPerPage: number;
+
+  /**
+   * チェック日時
+   */
+  @Prop()
+  lastStatusCheck: Date;
 }
 
 export type ApiDocument = HydratedDocument<Api, SchemaTimestampsConfig>;

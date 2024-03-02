@@ -1,5 +1,5 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, SchemaTimestampsConfig } from 'mongoose';
+import { Prop, Schema, SchemaFactory, raw } from '@nestjs/mongoose';
+import mongoose, { HydratedDocument, SchemaTimestampsConfig } from 'mongoose';
 
 /**
  * ピア
@@ -62,10 +62,23 @@ export class Peer {
   networkIdentifier: number;
 
   /**
-   * HTTPs有無
+   * ブロック高
    */
-  @Prop()
-  isHttpsEnabled: boolean;
+  @Prop({ type: mongoose.Schema.Types.BigInt })
+  chainHeight: bigint;
+
+  /**
+   * ファイナライゼーション
+   */
+  @Prop(
+    raw({
+      height: { type: mongoose.Schema.Types.BigInt },
+      epoch: { type: Number },
+      point: { type: Number },
+      hash: { type: String },
+    }),
+  )
+  finalization: Record<string, any>;
 
   /**
    * 証明書有効期限
@@ -74,35 +87,16 @@ export class Peer {
   certificateExpirationDate: Date;
 
   /**
-   * Peer死活
+   * Peer利用可否
    */
   @Prop()
   isAvailable: boolean;
 
   /**
-   * WebSocket利用可否
-   */
-  @Prop()
-  isWsAvailable: boolean;
-
-  /**
-   * WebSocket(SSL)利用可否
-   */
-  @Prop()
-  isWssAvailable: boolean;
-
-  /**
    * チェック日時
    */
   @Prop()
-  lastCheck: Date;
-
-  /**
-   * 同期チェック日時
-   * 他ノードの/node/peersに載っているか確認出来た日時
-   */
-  @Prop()
-  lastSyncCheck: Date;
+  lastStatusCheck: Date;
 }
 
 export type PeerDocument = HydratedDocument<Peer, SchemaTimestampsConfig>;

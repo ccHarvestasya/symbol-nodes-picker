@@ -1,7 +1,6 @@
 import { PeersService } from '@/services/peers.service';
 import { Controller, Get, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
-import { NodeInfo, NodePeer } from 'symbol-sdk-ext/dist/model/node';
 
 /**
  * Peers コントローラ
@@ -16,8 +15,8 @@ export class PeersController {
   constructor(private readonly peersService: PeersService) {}
 
   @Cron('0 */13 * * * *')
-  async cronRegisterNewNodePeer() {
-    const methodName = 'cronRegisterNewNodePeer';
+  async cronUpdatePeersCollection() {
+    const methodName = 'cronUpdatePeersCollection';
     this.logger.log('start - ' + methodName);
 
     // Peersコレクションからチェック日時が古い方から取得
@@ -25,29 +24,24 @@ export class PeersController {
     // ジェネレーションハッシュシード
     const networkGenerationHashSeed =
       await this.peersService.getNetworkGenerationHashSeed();
-    // /node/peersリストマップ取得
+    // NodePeersマップ取得
     const nodePeersMap = await this.peersService.getNodePeersMap(
       peerDocs,
       networkGenerationHashSeed,
     );
 
-    // /node/info取得
-    const nodePeerInfos =
-      await this.peersService.getNodePeerInfos(nodePeersMap);
-    for (const nodePeerInfo of nodePeerInfos) {
-      // Peersコレクション登録/更新
-      this.peersService.updatePeerInfo(
-        nodePeerInfo[0] as NodePeer,
-        nodePeerInfo[1] as NodeInfo,
-      );
-    }
+    // Peersコレクション登録/更新
+    await this.peersService.updatePeersCollection(
+      nodePeersMap,
+      networkGenerationHashSeed,
+    );
 
     this.logger.log(' end  - ' + methodName);
   }
 
   @Get()
-  async getRegisterNewNodePeer(): Promise<void> {
-    const methodName = 'getRegisterNewNodePeer';
+  async getUpdatePeersCollection(): Promise<void> {
+    const methodName = 'getUpdatePeersCollection';
     this.logger.log('start - ' + methodName);
 
     // Peersコレクションからチェック日時が古い方から取得
@@ -55,22 +49,17 @@ export class PeersController {
     // ジェネレーションハッシュシード
     const networkGenerationHashSeed =
       await this.peersService.getNetworkGenerationHashSeed();
-    // /node/peersリストマップ取得
+    // NodePeersマップ取得
     const nodePeersMap = await this.peersService.getNodePeersMap(
       peerDocs,
       networkGenerationHashSeed,
     );
 
-    // /node/info取得
-    const nodePeerInfos =
-      await this.peersService.getNodePeerInfos(nodePeersMap);
-    for (const nodePeerInfo of nodePeerInfos) {
-      // Peersコレクション登録/更新
-      this.peersService.updatePeerInfo(
-        nodePeerInfo[0] as NodePeer,
-        nodePeerInfo[1] as NodeInfo,
-      );
-    }
+    // Peersコレクション登録/更新
+    await this.peersService.updatePeersCollection(
+      nodePeersMap,
+      networkGenerationHashSeed,
+    );
 
     this.logger.log('e n d - ' + methodName);
   }

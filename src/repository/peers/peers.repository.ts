@@ -1,7 +1,7 @@
-import { PeerCreateDto } from '@/repository/peers/dto/peerCreateDto';
-import { PeerKeyDto } from '@/repository/peers/dto/peerKeyDto';
-import { PeerUpdateDto } from '@/repository/peers/dto/peerUpdateDto';
+import { PeersCreateDto } from '@/repository/peers/dto/peersCreateDto';
 import { PeersFindDto } from '@/repository/peers/dto/peersFindDto';
+import { PeersKeyDto } from '@/repository/peers/dto/peersKeyDto';
+import { PeersUpdateDto } from '@/repository/peers/dto/peersUpdateDto';
 import { Peer, PeerDocument } from '@/schema/peer.schema';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
@@ -23,7 +23,7 @@ export class PeersRepository {
    * @param createDto 登録DTO
    * @returns ピアドキュメント
    */
-  async create(createDto: PeerCreateDto): Promise<PeerDocument> {
+  async create(createDto: PeersCreateDto): Promise<PeerDocument> {
     return await this.peerModel.create(createDto);
   }
 
@@ -34,8 +34,8 @@ export class PeersRepository {
    * @returns 更新結果
    */
   async updateOne(
-    keyDto: PeerKeyDto,
-    updateDto: PeerUpdateDto,
+    keyDto: PeersKeyDto,
+    updateDto: PeersUpdateDto,
   ): Promise<UpdateWriteOpResult> {
     return this.peerModel.updateOne(keyDto, updateDto).exec();
   }

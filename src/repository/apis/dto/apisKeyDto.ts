@@ -1,4 +1,4 @@
-export class ChainKeyDto {
+export class ApisKeyDto {
   host: string;
   publicKey: string;
 

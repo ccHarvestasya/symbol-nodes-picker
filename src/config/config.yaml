@@ -1,6 +1,6 @@
 db:
   mongo:
-    uri: 'mongodb://127.0.0.1:27017/sn-librarian'
+    uri: 'mongodb://127.0.0.1:27017/SymboLibrarian'
 connection:
   init-host:
     - '20.48.92.124'
