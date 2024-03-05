@@ -3,7 +3,7 @@ import { PeersRepository } from '@/repository/peers/peers.repository';
 import { SettingsRepository } from '@/repository/settings/settings.repository';
 import { Peer, PeerDocument } from '@/schema/peer.schema';
 import { Setting } from '@/schema/setting.schema';
-import { PeersService } from '@/services/peers.service';
+import { PeersService } from '@/services/nodes.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { getModelToken } from '@nestjs/mongoose';
 import { Test, TestingModule } from '@nestjs/testing';

@@ -1,12 +1,12 @@
-import { BasePeersDto } from '@/repository/peers/dto/BasePeersDto';
-import { PeersCreateDto } from '@/repository/peers/dto/peersCreateDto';
-import { PeersFindDto } from '@/repository/peers/dto/peersFindDto';
-import { PeersKeyDto } from '@/repository/peers/dto/peersKeyDto';
-import { PeersUpdateDto } from '@/repository/peers/dto/peersUpdateDto';
-import { PeersRepository } from '@/repository/peers/peers.repository';
-import { SettingKeyDto } from '@/repository/settings/dto/settingKeyDto';
+import { BaseNodesDto } from '@/repository/nodes/dto/BaseNodesDto';
+import { NodesCreateDto } from '@/repository/nodes/dto/NodesCreateDto';
+import { NodesFindDto } from '@/repository/nodes/dto/NodesFindDto';
+import { NodesUpdateDto } from '@/repository/nodes/dto/NodesUpdateDto';
+import { NodesKeyDto } from '@/repository/nodes/dto/nodesKeyDto';
+import { NodesRepository } from '@/repository/nodes/nodes.repository';
+import { SettingKeyDto } from '@/repository/settings/dto/SettingKeyDto';
 import { SettingsRepository } from '@/repository/settings/settings.repository';
-import { PeerDocument } from '@/schema/peer.schema';
+import { NodeDocument } from '@/schema/node.schema';
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
@@ -17,35 +17,31 @@ import {
 import { ChainInfo } from 'symbol-sdk-ext/dist/model/blockchain';
 import { NodeInfo, NodePeer } from 'symbol-sdk-ext/dist/model/node';
 
-/**
- * Peersサービス
- */
+/** Nodesサービス */
 @Injectable()
-export class PeersService {
-  /**
-   * ロガー
-   */
-  private readonly logger = new Logger(PeersService.name);
+export class NodesService {
+  /** ロガー */
+  private readonly logger = new Logger(NodesService.name);
 
   /**
    * コンストラクタ
    * @param configService コンフィグサービス
-   * @param peersRepository Peersリポジトリ
+   * @param nodesRepository Nodesリポジトリ
    */
   constructor(
     private readonly configService: ConfigService,
     private readonly settingsRepository: SettingsRepository,
-    private readonly peersRepository: PeersRepository,
+    private readonly nodesRepository: NodesRepository,
   ) {}
 
   /**
    * NodePeersマップ取得
-   * @param peerDocs Peerドキュメント
+   * @param nodeDocs Nodeドキュメント
    * @param networkGenerationHashSeed ネットワークジェネレーションハッシュ
    * @returns NodePeersマップ
    */
   async getNodePeersMap(
-    peerDocs: PeerDocument[],
+    nodeDocs: NodeDocument[],
     networkGenerationHashSeed: string,
   ) {
     // 設定からタイムアウトを取得
@@ -53,18 +49,18 @@ export class PeersService {
 
     // チャンク数取得
     let chunk = this.configService.get<number>('connection.request-chunk');
-    if (peerDocs.length < chunk) {
-      chunk = peerDocs.length;
+    if (nodeDocs.length < chunk) {
+      chunk = nodeDocs.length;
     }
     // チャンク毎にまとめる
-    const peerDocProcesses: PeerDocument[][] = new Array(chunk);
+    const chunkNodeDoc: NodeDocument[][] = new Array(chunk);
     for (let i = 0; i < chunk; i++) {
-      peerDocProcesses[i] = [];
+      chunkNodeDoc[i] = [];
     }
     let chunkIndex = 0;
-    for (const peerDoc of peerDocs) {
+    for (const doc of nodeDocs) {
       const index = chunkIndex % chunk;
-      peerDocProcesses[index].push(peerDoc);
+      chunkNodeDoc[index].push(doc);
       chunkIndex++;
     }
 
@@ -74,7 +70,7 @@ export class PeersService {
     for (let i = 0; i < chunk; i++) {
       nodePeersPromises.push(
         this.getNodePeers(
-          peerDocProcesses[i],
+          chunkNodeDoc[i],
           timeout,
           networkGenerationHashSeed,
           nodePeersMap,
@@ -86,7 +82,7 @@ export class PeersService {
     return nodePeersMap;
   }
 
-  async updatePeersCollection(
+  async updateNodesCollection(
     nodePeersMap: Map<string, NodePeer>,
     networkGenerationHashSeed: string,
   ) {
@@ -113,26 +109,39 @@ export class PeersService {
       chunkIndex++;
     }
 
-    // Peersコレクション更新
+    // Nodesコレクション更新
     const nodePeersPromises: Promise<void>[] = [];
     for (let i = 0; i < chunk; i++) {
       nodePeersPromises.push(
-        this.updatePeers(chunkNodePeers[i], timeout, networkGenerationHashSeed),
+        this.updateNodes(chunkNodePeers[i], timeout, networkGenerationHashSeed),
       );
     }
     await Promise.all(nodePeersPromises);
   }
 
   /**
-   * Peerコレクションからチェック日時が古い方から取得
-   * @returns Peersドキュメント配列
+   * Nodesコレクションからチェック日時が古い方から取得
+   * @returns Nodeドキュメント配列
    */
-  async getPeerDocCheckedOldest(): Promise<PeerDocument[]> {
-    const findDto = new PeersFindDto();
+  async getNodeDocCheckedOldest() {
+    const findDto = new NodesFindDto();
     const limit = this.configService.get<number>('connection.request-count');
-    const peerDocs = await this.peersRepository.findIsOldLimit(findDto, limit);
+    const nodeDocs = await this.nodesRepository.findIsOldLimit(findDto, limit);
+    return nodeDocs;
+  }
 
-    return peerDocs;
+  /**
+   * Nodesコレクションからチェック日時が古い方から取得
+   * @returns Nodeドキュメント配列
+   */
+  async getNodeDocApiCheckedOldest() {
+    const findDto = new NodesFindDto();
+    const limit = this.configService.get<number>('connection.request-count');
+    const nodeDocs = await this.nodesRepository.findApiIsOldLimit(
+      findDto,
+      limit,
+    );
+    return nodeDocs;
   }
 
   /**
@@ -147,21 +156,21 @@ export class PeersService {
 
   /**
    * NodePeers取得
-   * @param peerDocs Peerドキュメント
+   * @param nodeDocs Peerドキュメント
    * @param timeout タイムアウト
    * @param networkGenerationHashSeed ネットワークジェネレーションハッシュシード
    * @param nodePeersMap NodePeersマップ
    */
   private async getNodePeers(
-    peerDocs: PeerDocument[],
+    nodeDocs: NodeDocument[],
     timeout: number,
     networkGenerationHashSeed: string,
     nodePeersMap: Map<string, NodePeer>,
   ) {
-    for (const peerDoc of peerDocs) {
-      const nodeHost = peerDoc.host;
-      const nodePort = peerDoc.port;
-      const isHttps = await new SymbolSdkExt().isEnableHttps(nodeHost);
+    for (const doc of nodeDocs) {
+      const nodeHost = doc.host;
+      const nodePort = doc.peer.port;
+      const isHttps = await new SymbolSdkExt(timeout).isEnableHttps(nodeHost);
 
       try {
         // ソケットからピアリスト取得
@@ -215,14 +224,16 @@ export class PeersService {
     }
   }
 
-  private async updatePeers(
+  private async updateNodes(
     nodePeers: NodePeer[],
     timeout: number,
     networkGenerationHashSeed: string,
   ) {
     for (const nodePeer of nodePeers) {
       // HTTPs判定
-      const isHttps = await new SymbolSdkExt().isEnableHttps(nodePeer.host);
+      const isHttps = await new SymbolSdkExt(timeout).isEnableHttps(
+        nodePeer.host,
+      );
       // NodeInfo取得
       const nodeInfo = await this.getNodeInfo(
         nodePeer,
@@ -233,31 +244,31 @@ export class PeersService {
       // ChainInfo取得
       const chainInfo = await this.getChainInfo(nodePeer, isHttps, timeout);
 
-      // Peersコレクション更新
+      // Nodesコレクション更新
       try {
-        // Peersコレクション存在チェック
-        const findDto = new PeersFindDto();
+        // Nodesコレクション存在チェック
+        const findDto = new NodesFindDto();
         findDto.host = nodePeer.host;
         findDto.publicKey = nodePeer.publicKey;
-        const peerDoc = await this.peersRepository.findOne(findDto);
+        const nodeDoc = await this.nodesRepository.findOne(findDto);
 
-        if (!peerDoc) {
+        if (!nodeDoc) {
           // 登録
-          const createDto = new PeersCreateDto();
+          const createDto = new NodesCreateDto();
           createDto.host = nodePeer.host;
           createDto.publicKey = nodePeer.publicKey;
           if (nodeInfo !== undefined) {
-            createDto.port = nodeInfo.port;
-            createDto.friendlyName = nodeInfo.friendlyName;
+            createDto.peer.port = nodeInfo.port;
+            createDto.peer.friendlyName = nodeInfo.friendlyName;
           }
-          this.editPeerCreateDto(createDto, nodePeer, nodeInfo, chainInfo);
-          await this.peersRepository.create(createDto);
+          this.editNodeCreateDto(createDto, nodePeer, nodeInfo, chainInfo);
+          await this.nodesRepository.create(createDto);
         } else {
           // 更新
-          const keyDto = new PeersKeyDto(nodePeer.host, nodePeer.publicKey);
-          const updateDto = new PeersUpdateDto();
-          this.editPeerCreateDto(updateDto, nodePeer, nodeInfo, chainInfo);
-          await this.peersRepository.updateOne(keyDto, updateDto);
+          const keyDto = new NodesKeyDto(nodePeer.host, nodePeer.publicKey);
+          const updateDto = new NodesUpdateDto();
+          this.editNodeCreateDto(updateDto, nodePeer, nodeInfo, chainInfo);
+          await this.nodesRepository.updateOne(keyDto, updateDto);
         }
       } catch (e) {
         this.logger.error(`updatePeerInfo: ${e}`);
@@ -302,7 +313,7 @@ export class PeersService {
             `[OK] ${nodeHost}:${isHttps ? 3001 : 3000}/node/info`,
           );
         } else {
-          this.logger.log(
+          this.logger.warn(
             `[NG] ${nodeHost}:${isHttps ? 3001 : 3000}/node/info`,
           );
         }
@@ -370,56 +381,60 @@ export class PeersService {
     return chainInfo;
   }
 
-  private editPeerCreateDto(
-    peerDto: BasePeersDto,
+  private editNodeCreateDto(
+    nodeDto: BaseNodesDto,
     nodePeer: NodePeer,
     nodeInfo: NodeInfo | undefined,
     chainInfo: ChainInfo | undefined,
   ) {
     // チェック日時
-    peerDto.lastStatusCheck = new Date();
+    nodeDto.peer.lastStatusCheck = new Date();
 
     // ポート
-    peerDto.port = nodePeer.port;
+    nodeDto.peer.port = nodePeer.port;
     // フレンドリー名
-    peerDto.friendlyName = nodePeer.friendlyName;
+    nodeDto.peer.friendlyName = nodePeer.friendlyName;
     // バージョン
-    peerDto.version = nodePeer.version;
+    nodeDto.peer.version = nodePeer.version;
     // ジェネレーションハッシュシード
-    peerDto.networkGenerationHashSeed = nodePeer.networkGenerationHashSeed;
+    nodeDto.peer.networkGenerationHashSeed = nodePeer.networkGenerationHashSeed;
     // ロール
-    peerDto.roles = nodePeer.roles;
+    nodeDto.peer.roles = nodePeer.roles;
     // ネットワーク識別子
-    peerDto.networkIdentifier = nodePeer.networkIdentifier;
+    nodeDto.peer.networkIdentifier = nodePeer.networkIdentifier;
     // Peer利用可否
-    peerDto.isAvailable = false;
+    nodeDto.peer.isAvailable = false;
 
     if (nodeInfo !== undefined) {
       // ポート
-      peerDto.port = nodeInfo.port;
+      nodeDto.peer.port = nodeInfo.port;
       // フレンドリー名
-      peerDto.friendlyName = nodeInfo.friendlyName;
+      nodeDto.peer.friendlyName = nodeInfo.friendlyName;
       // バージョン
-      peerDto.version = nodeInfo.version;
+      nodeDto.peer.version = nodeInfo.version;
       // ジェネレーションハッシュシード
-      peerDto.networkGenerationHashSeed = nodeInfo.networkGenerationHashSeed;
+      nodeDto.peer.networkGenerationHashSeed =
+        nodeInfo.networkGenerationHashSeed;
       // ロール
-      peerDto.roles = nodeInfo.roles;
+      nodeDto.peer.roles = nodeInfo.roles;
       // ネットワーク識別子
-      peerDto.networkIdentifier = nodeInfo.networkIdentifier;
+      nodeDto.peer.networkIdentifier = nodeInfo.networkIdentifier;
       // ノード公開鍵
-      peerDto.nodePublicKey = nodeInfo.nodePublicKey;
-      // 証明書有効期限
-      peerDto.certificateExpirationDate = nodeInfo.certificateExpirationDate;
-      // Peer利用可否
-      peerDto.isAvailable = true;
+      nodeDto.peer.nodePublicKey = nodeInfo.nodePublicKey;
+      if (nodeInfo.certificateExpirationDate) {
+        // 証明書有効期限
+        nodeDto.peer.certificateExpirationDate =
+          nodeInfo.certificateExpirationDate;
+        // Peer利用可否
+        nodeDto.peer.isAvailable = true;
+      }
     }
 
     if (chainInfo !== undefined) {
       // ブロック高
-      peerDto.chainHeight = BigInt(chainInfo.height);
+      nodeDto.peer.chainHeight = BigInt(chainInfo.height);
       // ファイナライゼーション
-      peerDto.finalization = {
+      nodeDto.peer.finalization = {
         // ファイナライゼーションブロック高
         height: BigInt(chainInfo.latestFinalizedBlock.height),
         // ファイナライゼーションエポック

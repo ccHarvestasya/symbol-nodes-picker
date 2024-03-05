@@ -31,7 +31,7 @@ export class AppController {
     this.logger.verbose('start - ' + methodName);
 
     // Peer コレクション初期セット
-    await this.appService.initPeersCollection();
+    await this.appService.initNodesCollection();
 
     this.logger.verbose(' end  - ' + methodName);
   }

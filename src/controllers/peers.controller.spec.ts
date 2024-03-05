@@ -1,11 +1,11 @@
 import configuration from '@/config/configuration';
 import { PeersRepositoryModule } from '@/repository/peers/peers.repository.module';
 import { SettingsRepositoryModule } from '@/repository/settings/settings.repository.module';
-import { PeersService } from '@/services/peers.service';
+import { PeersService } from '@/services/nodes.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Test, TestingModule } from '@nestjs/testing';
-import { PeersController } from './peers.controller';
+import { PeersController } from './nodes.controller';
 
 describe('PeersController', () => {
   let controller: PeersController;

@@ -20,4 +20,5 @@ export class Setting {
 }
 
 export type SettingDocument = HydratedDocument<Setting, SchemaTimestampsConfig>;
-export const SettingSchema = SchemaFactory.createForClass(Setting);
+export const settingSchema = SchemaFactory.createForClass(Setting);
+settingSchema.index({ key: 1 }, { unique: true });

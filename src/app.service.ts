@@ -1,6 +1,6 @@
-import { PeersCreateDto } from '@/repository/peers/dto/peersCreateDto';
-import { PeersRepository } from '@/repository/peers/peers.repository';
-import { SettingCreateDto } from '@/repository/settings/dto/settingCreateDto';
+import { NodesCreateDto } from '@/repository/nodes/dto/NodesCreateDto';
+import { NodesRepository } from '@/repository/nodes/nodes.repository';
+import { SettingCreateDto } from '@/repository/settings/dto/SettingCreateDto';
 import { SettingsRepository } from '@/repository/settings/settings.repository';
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -21,27 +21,29 @@ export class AppService {
    * コンストラクタ
    * @param configService コンフィグサービス
    * @param settingsRepository Settingリポジトリ
-   * @param peersRepository Peerリポジトリ
+   * @param nodesRepository Nodesリポジトリ
    */
   constructor(
     private readonly configService: ConfigService,
     private readonly settingsRepository: SettingsRepository,
-    private readonly peersRepository: PeersRepository,
+    private readonly nodesRepository: NodesRepository,
   ) {}
 
   /**
    * 初回処理
-   * RestGatewayから情報を取得し、Peerコレクションを登録する。
+   * RestGatewayから情報を取得し、Nodesコレクションを登録する。
    */
-  async initPeersCollection() {
-    const methodName = 'initPeersCollection';
+  async initNodesCollection() {
+    const methodName = 'initNodesCollection';
     this.logger.verbose('start - ' + methodName);
 
-    // Peerコレクションから1件取得
-    const peersDoc = await this.peersRepository.findOne();
+    // Nodesコレクションから1件取得
+    const nodesDoc = await this.nodesRepository.findOne();
 
-    if (!peersDoc) {
-      this.logger.log('コレクションが存在しません。初期データを読み込みます。');
+    if (!nodesDoc) {
+      this.logger.log(
+        'Nodesコレクションが存在しません。初期データを読み込みます。',
+      );
 
       // 設定から初期ノードホストを取得
       const initNodeHosts = this.configService.get<string[]>(
@@ -76,21 +78,20 @@ export class AppService {
 
         try {
           if (nodeInfo) {
-            const peerCreateDto = new PeersCreateDto();
-            peerCreateDto.host = initNodeHost;
-            peerCreateDto.publicKey = nodeInfo.publicKey;
-            peerCreateDto.nodePublicKey = nodeInfo.nodePublicKey;
-            peerCreateDto.port = nodeInfo.port;
-            peerCreateDto.friendlyName = nodeInfo.friendlyName;
-            peerCreateDto.version = nodeInfo.version;
-            peerCreateDto.networkGenerationHashSeed =
+            const createDto = new NodesCreateDto();
+            createDto.host = initNodeHost;
+            createDto.publicKey = nodeInfo.publicKey;
+            createDto.peer.nodePublicKey = nodeInfo.nodePublicKey;
+            createDto.peer.port = nodeInfo.port;
+            createDto.peer.friendlyName = nodeInfo.friendlyName;
+            createDto.peer.version = nodeInfo.version;
+            createDto.peer.networkGenerationHashSeed =
               nodeInfo.networkGenerationHashSeed;
-            peerCreateDto.roles = nodeInfo.roles;
-            peerCreateDto.networkIdentifier = nodeInfo.networkIdentifier;
-            peerCreateDto.certificateExpirationDate =
+            createDto.peer.roles = nodeInfo.roles;
+            createDto.peer.networkIdentifier = nodeInfo.networkIdentifier;
+            createDto.peer.certificateExpirationDate =
               nodeInfo.certificateExpirationDate;
-
-            await this.peersRepository.create(peerCreateDto);
+            await this.nodesRepository.create(createDto);
             // ジェネレーションハッシュシード退避
             networkGenerationHashSeed = nodeInfo.networkGenerationHashSeed;
           }

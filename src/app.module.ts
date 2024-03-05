@@ -1,16 +1,10 @@
 import { AppController } from '@/app.controller';
 import { AppService } from '@/app.service';
 import configuration from '@/config/configuration';
-import { ApisModule } from '@/modules/apis.module';
-import { PeersModule } from '@/modules/peers.module';
-import { VotingsModule } from '@/modules/votings.module';
-import { ApisRepositoryModule } from '@/repository/apis/apis.repository.module';
-import { PeersRepositoryModule } from '@/repository/peers/peers.repository.module';
+import { NodesModule } from '@/modules/nodes.module';
+import { NodesRepositoryModule } from '@/repository/nodes/nodes.repository.module';
 import { SettingsRepositoryModule } from '@/repository/settings/settings.repository.module';
-import { VotingsRepositoryModule } from '@/repository/votings/votings.repository.module';
-import { ApisService } from '@/services/apis.service';
-import { PeersService } from '@/services/peers.service';
-import { VotingsService } from '@/services/votings.service';
+import { NodesService } from '@/services/nodes.service';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
@@ -33,14 +27,10 @@ import { ScheduleModule } from '@nestjs/schedule';
       }),
     }),
     SettingsRepositoryModule,
-    PeersRepositoryModule,
-    PeersModule,
-    ApisRepositoryModule,
-    ApisModule,
-    VotingsRepositoryModule,
-    VotingsModule,
+    NodesRepositoryModule,
+    NodesModule,
   ],
   controllers: [AppController],
-  providers: [AppService, PeersService, ApisService, VotingsService],
+  providers: [AppService, NodesService],
 })
 export class AppModule {}
