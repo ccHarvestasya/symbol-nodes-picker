@@ -71,7 +71,7 @@ export class NodesRepository {
   ): Promise<NodeDocument[]> {
     return this.nodeModel
       .find(findDto)
-      .sort({ 'api.lastStatusCheck': -1 })
+      .sort({ 'api.lastStatusCheck': 1 })
       .limit(limit)
       .exec();
   }
@@ -89,8 +89,19 @@ export class NodesRepository {
    * ピアコレクション単一検索
    * @returns ピアドキュメント
    */
-  async findOne(findDto?: NodesFindDto): Promise<NodeDocument> {
-    return this.nodeModel.findOne(findDto).exec();
+  async findOne(keyDto?: NodesKeyDto): Promise<NodeDocument> {
+    return this.nodeModel.findOne(keyDto).exec();
+  }
+
+  /**
+   * ピアコレクション検索更新
+   * @returns ピアドキュメント
+   */
+  async findOneAndUpdate(
+    keyDto: NodesKeyDto,
+    nodeDoc: NodeDocument,
+  ): Promise<NodeDocument> {
+    return this.nodeModel.findOneAndUpdate(keyDto, nodeDoc).exec();
   }
 
   /**

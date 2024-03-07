@@ -82,12 +82,18 @@ export class NodesController {
    */
   private async updateApi() {
     // Nodesコレクションからチェック日時が古い方から取得
-    const nodeDocs = await this.nodesService.getNodeDocCheckedOldest();
+    const nodeDocs = await this.nodesService.getNodeDocApiCheckedOldest();
     // Api持ちのみにフィルタ
-    const apiNodeDoc = nodeDocs.filter((item) => item.peer?.roles & 2);
+    // const apiNodeDoc = nodeDocs.filter((item) => item.peer?.roles & 2);
 
-    for (const doc of apiNodeDoc) {
-      console.log('%o:%o:%o', doc.host, doc.peer?.roles, doc.peer?.roles & 2);
+    for (const doc of nodeDocs) {
+      console.log(
+        '%o:%o:%o',
+        doc.api?.lastStatusCheck,
+        doc.host,
+        doc.peer?.roles,
+      );
     }
+    await this.nodesService.updateNodesCollectionOfApi(nodeDocs);
   }
 }

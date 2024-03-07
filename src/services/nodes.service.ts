@@ -1,7 +1,6 @@
 import { BaseNodesDto } from '@/repository/nodes/dto/BaseNodesDto';
 import { NodesCreateDto } from '@/repository/nodes/dto/NodesCreateDto';
 import { NodesFindDto } from '@/repository/nodes/dto/NodesFindDto';
-import { NodesUpdateDto } from '@/repository/nodes/dto/NodesUpdateDto';
 import { NodesKeyDto } from '@/repository/nodes/dto/nodesKeyDto';
 import { NodesRepository } from '@/repository/nodes/nodes.repository';
 import { SettingKeyDto } from '@/repository/settings/dto/SettingKeyDto';
@@ -14,6 +13,7 @@ import {
   RepositoryFactorySocket,
   SymbolSdkExt,
 } from 'symbol-sdk-ext';
+import { Listener } from 'symbol-sdk-ext/dist/infrastructure';
 import { ChainInfo } from 'symbol-sdk-ext/dist/model/blockchain';
 import { NodeInfo, NodePeer } from 'symbol-sdk-ext/dist/model/node';
 
@@ -114,6 +114,41 @@ export class NodesService {
     for (let i = 0; i < chunk; i++) {
       nodePeersPromises.push(
         this.updateNodes(chunkNodePeers[i], timeout, networkGenerationHashSeed),
+      );
+    }
+    await Promise.all(nodePeersPromises);
+  }
+
+  /**
+   * NodesコレクションApi更新
+   * @param nodeDocs Nodeドキュメント
+   */
+  async updateNodesCollectionOfApi(nodeDocs: NodeDocument[]) {
+    // 設定からタイムアウトを取得
+    const timeout = this.configService.get<number>('connection.timeout');
+
+    // チャンク数取得
+    let chunk = this.configService.get<number>('connection.request-chunk');
+    if (nodeDocs.length < chunk) {
+      chunk = nodeDocs.length;
+    }
+    // チャンク毎にまとめる
+    const chunkNodeDocs: NodeDocument[][] = new Array(chunk);
+    for (let i = 0; i < chunk; i++) {
+      chunkNodeDocs[i] = [];
+    }
+    let chunkIndex = 0;
+    for (const nodeDoc of nodeDocs) {
+      const index = chunkIndex % chunk;
+      chunkNodeDocs[index].push(nodeDoc);
+      chunkIndex++;
+    }
+
+    // NodesコレクションApi更新
+    const nodePeersPromises: Promise<void>[] = [];
+    for (let i = 0; i < chunk; i++) {
+      nodePeersPromises.push(
+        this.updateNodesCollectionOfApiAsync(chunkNodeDocs[i], timeout),
       );
     }
     await Promise.all(nodePeersPromises);
@@ -266,9 +301,9 @@ export class NodesService {
         } else {
           // 更新
           const keyDto = new NodesKeyDto(nodePeer.host, nodePeer.publicKey);
-          const updateDto = new NodesUpdateDto();
-          this.editNodeCreateDto(updateDto, nodePeer, nodeInfo, chainInfo);
-          await this.nodesRepository.updateOne(keyDto, updateDto);
+          const updateNodeDoc = await this.nodesRepository.findOne(keyDto);
+          this.editNodeCreateDto(updateNodeDoc, nodePeer, nodeInfo, chainInfo);
+          await this.nodesRepository.findOneAndUpdate(keyDto, updateNodeDoc);
         }
       } catch (e) {
         this.logger.error(`updatePeerInfo: ${e}`);
@@ -382,7 +417,7 @@ export class NodesService {
   }
 
   private editNodeCreateDto(
-    nodeDto: BaseNodesDto,
+    nodeDto: BaseNodesDto | NodeDocument,
     nodePeer: NodePeer,
     nodeInfo: NodeInfo | undefined,
     chainInfo: ChainInfo | undefined,
@@ -444,6 +479,123 @@ export class NodesService {
         // ファイナライゼーションハッシュ
         hash: chainInfo.latestFinalizedBlock.hash,
       };
+    }
+  }
+
+  /**
+   * NodesコレクションのApi情報を更新する
+   * @param host ホスト
+   * @param publicKey 公開鍵
+   * @param timeout タイムアウト
+   */
+  async updateNodesCollectionOfApiAsync(
+    nodeDocs: NodeDocument[],
+    timeout: number,
+  ) {
+    for (const nodeDoc of nodeDocs) {
+      const host = nodeDoc.host;
+      const publicKey = nodeDoc.publicKey;
+      const port = nodeDoc.peer.port;
+
+      this.logger.warn(`[Api Check] ${host}`);
+      const sdkExt = new SymbolSdkExt(timeout);
+
+      // HTTPs利用可否
+      const isEnableHttps = await sdkExt.isEnableHttps(host);
+
+      // ハーベスタ数
+      // socket
+      const repoFactorySocket = new RepositoryFactorySocket(
+        host,
+        port,
+        timeout,
+      );
+      let nodeRepo = repoFactorySocket.createNodeRepository();
+      let unlockedAccount = await nodeRepo.getNodeUnlockedAccount();
+      if (unlockedAccount === undefined) {
+        // http
+        const repoFactoryHttp = new RepositoryFactoryHttp(
+          host,
+          isEnableHttps,
+          timeout,
+        );
+        nodeRepo = repoFactoryHttp.createNodeRepository();
+        unlockedAccount = await nodeRepo.getNodeUnlockedAccount();
+      }
+      let harvesters = 0;
+      if (unlockedAccount?.unlockedAccount !== undefined) {
+        harvesters = unlockedAccount.unlockedAccount.length;
+      }
+
+      // WebSocket
+      let webSocketUrl = '';
+      let isWss = false;
+      let isWsAvailable = false;
+      try {
+        if (isEnableHttps) {
+          webSocketUrl = `wss://${host}:3001/ws`;
+          isWsAvailable = await new Listener(
+            host,
+            true,
+            false,
+          ).isWebsokectAvailable();
+          isWss = isWsAvailable;
+        }
+        if (!isWsAvailable) {
+          webSocketUrl = `ws://${host}:3000/ws`;
+          isWsAvailable = await new Listener(
+            host,
+            false,
+            false,
+          ).isWebsokectAvailable();
+        }
+      } catch (e) {
+        this.logger.error(e);
+      }
+
+      // Api利用可否
+      const repoFactoryHttp = new RepositoryFactoryHttp(
+        host,
+        isEnableHttps,
+        timeout,
+      );
+      const networkRepo = repoFactoryHttp.createNetworkRepository();
+      const isAvailable = await networkRepo.isAvailableNetworkProperties();
+
+      // RESTゲートウェイURL
+      let restGatewayUrl = '';
+      if (isAvailable) {
+        if (isEnableHttps) {
+          restGatewayUrl = `https://${host}:3001`;
+        } else {
+          restGatewayUrl = `http://${host}:3000`;
+        }
+      }
+
+      // トランザクション検索数
+      const txSearchCountPerPage = await sdkExt.getTxSearchCountPerPage(
+        host,
+        isEnableHttps,
+      );
+
+      try {
+        // Nodesコレクション検索
+        const keyDto = new NodesKeyDto(host, publicKey);
+        const nodeDoc = await this.nodesRepository.findOne(keyDto);
+        // Nodesコレクション更新
+        nodeDoc.api.restGatewayUrl = restGatewayUrl;
+        nodeDoc.api.isHttpsEnabled = isEnableHttps;
+        nodeDoc.api.harvesters = harvesters;
+        nodeDoc.api.webSocket.isAvailable = isWsAvailable;
+        nodeDoc.api.webSocket.wss = isWss;
+        nodeDoc.api.webSocket.url = webSocketUrl;
+        nodeDoc.api.isAvailable = isAvailable;
+        nodeDoc.api.txSearchCountPerPage = txSearchCountPerPage;
+        nodeDoc.api.lastStatusCheck = new Date();
+        await this.nodesRepository.findOneAndUpdate(keyDto, nodeDoc);
+      } catch (e) {
+        this.logger.error(e);
+      }
     }
   }
 }
