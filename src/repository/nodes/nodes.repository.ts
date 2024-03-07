@@ -53,7 +53,7 @@ export class NodesRepository {
   ): Promise<NodeDocument[]> {
     return this.nodeModel
       .find(findDto)
-      .sort({ 'peer.lastStatusCheck': -1 })
+      .sort({ 'peer.lastStatusCheck': 1 })
       .limit(limit)
       .exec();
   }
@@ -72,6 +72,24 @@ export class NodesRepository {
     return this.nodeModel
       .find(findDto)
       .sort({ 'api.lastStatusCheck': 1 })
+      .limit(limit)
+      .exec();
+  }
+
+  /**
+   * Votingリミット検索（古い順）
+   * チェック日時が古い方から取得件数指定で検索
+   * @param findDto 検索DTO
+   * @param limit 取得件数
+   * @returns ピアドキュメント配列
+   */
+  async findVotingIsOldLimit(
+    findDto: NodesFindDto,
+    limit: number,
+  ): Promise<NodeDocument[]> {
+    return this.nodeModel
+      .find(findDto)
+      .sort({ 'voting.lastStatusCheck': 1 })
       .limit(limit)
       .exec();
   }

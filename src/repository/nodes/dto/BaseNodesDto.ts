@@ -111,17 +111,11 @@ class WebSocket {
 
 /** Voting */
 class Voting {
-  /** ホスト */
-  host: string;
-
-  /** 公開鍵 */
-  publicKey: string;
+  /** アカウント残高 */
+  balance: bigint;
 
   /** Votingキー */
   votingKey: VotingKey;
-
-  /** アカウント残高 */
-  accountBalance: bigint;
 
   /**
    * 投票有無

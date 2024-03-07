@@ -155,7 +155,42 @@ export class NodesService {
   }
 
   /**
-   * Nodesコレクションからチェック日時が古い方から取得
+   * NodesコレクションVoting更新
+   * @param nodeDocs Nodeドキュメント
+   */
+  async updateNodesCollectionOfVoting(nodeDocs: NodeDocument[]) {
+    // 設定からタイムアウトを取得
+    const timeout = this.configService.get<number>('connection.timeout');
+
+    // チャンク数取得
+    let chunk = this.configService.get<number>('connection.request-chunk');
+    if (nodeDocs.length < chunk) {
+      chunk = nodeDocs.length;
+    }
+    // チャンク毎にまとめる
+    const chunkNodeDocs: NodeDocument[][] = new Array(chunk);
+    for (let i = 0; i < chunk; i++) {
+      chunkNodeDocs[i] = [];
+    }
+    let chunkIndex = 0;
+    for (const nodeDoc of nodeDocs) {
+      const index = chunkIndex % chunk;
+      chunkNodeDocs[index].push(nodeDoc);
+      chunkIndex++;
+    }
+
+    // NodesコレクションVoting更新
+    const nodePeersPromises: Promise<void>[] = [];
+    for (let i = 0; i < chunk; i++) {
+      nodePeersPromises.push(
+        this.updateNodesCollectionOfVotingAsync(chunkNodeDocs[i], timeout),
+      );
+    }
+    await Promise.all(nodePeersPromises);
+  }
+
+  /**
+   * NodesコレクションからPeerチェック日時が古い方から取得
    * @returns Nodeドキュメント配列
    */
   async getNodeDocCheckedOldest() {
@@ -166,13 +201,27 @@ export class NodesService {
   }
 
   /**
-   * Nodesコレクションからチェック日時が古い方から取得
+   * NodesコレクションからApiチェック日時が古い方から取得
    * @returns Nodeドキュメント配列
    */
   async getNodeDocApiCheckedOldest() {
     const findDto = new NodesFindDto();
     const limit = this.configService.get<number>('connection.request-count');
     const nodeDocs = await this.nodesRepository.findApiIsOldLimit(
+      findDto,
+      limit,
+    );
+    return nodeDocs;
+  }
+
+  /**
+   * NodesコレクションからVotingチェック日時が古い方から取得
+   * @returns Nodeドキュメント配列
+   */
+  async getNodeDocVotingCheckedOldest() {
+    const findDto = new NodesFindDto();
+    const limit = this.configService.get<number>('connection.request-count');
+    const nodeDocs = await this.nodesRepository.findVotingIsOldLimit(
       findDto,
       limit,
     );
@@ -497,7 +546,7 @@ export class NodesService {
       const publicKey = nodeDoc.publicKey;
       const port = nodeDoc.peer.port;
 
-      this.logger.warn(`[Api Check] ${host}`);
+      this.logger.log(`[Api Check] ${host}`);
       const sdkExt = new SymbolSdkExt(timeout);
 
       // HTTPs利用可否
@@ -592,6 +641,81 @@ export class NodesService {
         nodeDoc.api.isAvailable = isAvailable;
         nodeDoc.api.txSearchCountPerPage = txSearchCountPerPage;
         nodeDoc.api.lastStatusCheck = new Date();
+        await this.nodesRepository.findOneAndUpdate(keyDto, nodeDoc);
+      } catch (e) {
+        this.logger.error(e);
+      }
+    }
+  }
+
+  /**
+   * NodesコレクションのVoting情報を更新する
+   * @param host ホスト
+   * @param publicKey 公開鍵
+   * @param timeout タイムアウト
+   */
+  async updateNodesCollectionOfVotingAsync(
+    nodeDocs: NodeDocument[],
+    timeout: number,
+  ) {
+    for (const nodeDoc of nodeDocs) {
+      const host = nodeDoc.host;
+      const publicKey = nodeDoc.publicKey;
+
+      this.logger.log(`[Voting Check] ${host}`);
+
+      // HTTPs利用可否
+      const sdkExt = new SymbolSdkExt(timeout);
+      const isEnableHttps = await sdkExt.isEnableHttps(host);
+
+      // アカウント
+      const repoFactoryHttp = new RepositoryFactoryHttp(
+        host,
+        isEnableHttps,
+        timeout,
+      );
+      const accountRepo = repoFactoryHttp.createAccountRepository();
+      const accountInfo = await accountRepo.getAccountInfo(publicKey);
+      let votingPublicKey = '';
+      let startEpoch = 0;
+      let endEpoch = 0;
+      let accountBalance = 0n;
+      let isVotingEnabled = false;
+      if (accountInfo !== undefined) {
+        const votingKeys =
+          accountInfo.account.supplementalPublicKeys?.voting?.publicKeys;
+        if (votingKeys !== undefined) {
+          const maxIndex = votingKeys?.length - 1;
+          votingPublicKey = votingKeys[maxIndex]?.publicKey;
+          startEpoch = votingKeys[maxIndex]?.startEpoch;
+          endEpoch = votingKeys[maxIndex]?.endEpoch;
+        }
+        const currentMosaic = accountInfo.account.mosaics?.filter(
+          (item) => item.id === '72C0212E67A08BCE',
+        );
+        accountBalance = BigInt(currentMosaic[0]?.amount);
+        if (
+          3000000000000n <= accountBalance &&
+          startEpoch <= nodeDoc.peer.finalization.epoch &&
+          nodeDoc.peer.finalization.epoch <= endEpoch
+        ) {
+          isVotingEnabled = true;
+        } else {
+          isVotingEnabled = false;
+        }
+      }
+
+      try {
+        // Nodesコレクション検索
+        const keyDto = new NodesKeyDto(host, publicKey);
+        const nodeDoc = await this.nodesRepository.findOne(keyDto);
+        // Nodesコレクション更新
+        nodeDoc.voting.balance = accountBalance;
+        nodeDoc.voting.votingKey.publicKey = votingPublicKey;
+        nodeDoc.voting.votingKey.startEpoch = startEpoch;
+        nodeDoc.voting.votingKey.endEpoch = endEpoch;
+        nodeDoc.voting.isVotingEnabled = isVotingEnabled;
+        nodeDoc.voting.lastStatusCheck = new Date();
         await this.nodesRepository.findOneAndUpdate(keyDto, nodeDoc);
       } catch (e) {
         this.logger.error(e);

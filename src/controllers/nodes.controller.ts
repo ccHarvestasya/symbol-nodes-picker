@@ -19,12 +19,12 @@ export class NodesController {
   /**
    * [Cron]Peer更新
    */
-  @Cron('0 */13 * * * *')
+  @Cron('0 */7 * * * *')
   async cronUpdatePeer() {
     const methodName = 'cronUpdatePeer';
     this.logger.log('start - ' + methodName);
 
-    this.updatePeer();
+    await this.updatePeer();
 
     this.logger.log(' end  - ' + methodName);
   }
@@ -32,14 +32,27 @@ export class NodesController {
   /**
    * [Get]Peer更新
    */
-  @Get()
+  @Get('peer')
   async getUpdatePeer(): Promise<void> {
     const methodName = 'getUpdatePeer';
     this.logger.log('start - ' + methodName);
 
-    this.updatePeer();
+    await this.updatePeer();
 
     this.logger.log('e n d - ' + methodName);
+  }
+
+  /**
+   * [Cron]Api更新
+   */
+  @Cron('0 */13 * * * *')
+  async cronUpdateApi() {
+    const methodName = 'cronUpdateApi';
+    this.logger.log('start - ' + methodName);
+
+    await this.updateApi();
+
+    this.logger.log(' end  - ' + methodName);
   }
 
   /**
@@ -50,7 +63,33 @@ export class NodesController {
     const methodName = 'getUpdateApi';
     this.logger.log('start - ' + methodName);
 
-    this.updateApi();
+    await this.updateApi();
+
+    this.logger.log('e n d - ' + methodName);
+  }
+
+  /**
+   * [Cron]Voting更新
+   */
+  @Cron('0 */27 * * * *')
+  async cronUpdateVoting() {
+    const methodName = 'cronUpdateVoting';
+    this.logger.log('start - ' + methodName);
+
+    await this.updateVoting();
+
+    this.logger.log(' end  - ' + methodName);
+  }
+
+  /**
+   * [Get]Voting更新
+   */
+  @Get('voting')
+  async getUpdateVoting(): Promise<void> {
+    const methodName = 'getUpdateVoting';
+    this.logger.log('start - ' + methodName);
+
+    await this.updateVoting();
 
     this.logger.log('e n d - ' + methodName);
   }
@@ -83,17 +122,17 @@ export class NodesController {
   private async updateApi() {
     // Nodesコレクションからチェック日時が古い方から取得
     const nodeDocs = await this.nodesService.getNodeDocApiCheckedOldest();
-    // Api持ちのみにフィルタ
-    // const apiNodeDoc = nodeDocs.filter((item) => item.peer?.roles & 2);
-
-    for (const doc of nodeDocs) {
-      console.log(
-        '%o:%o:%o',
-        doc.api?.lastStatusCheck,
-        doc.host,
-        doc.peer?.roles,
-      );
-    }
+    // NodesコレクションApi更新
     await this.nodesService.updateNodesCollectionOfApi(nodeDocs);
+  }
+
+  /**
+   * Voting更新
+   */
+  private async updateVoting() {
+    // Nodesコレクションからチェック日時が古い方から取得
+    const nodeDocs = await this.nodesService.getNodeDocVotingCheckedOldest();
+    // NodesコレクションVoting更新
+    await this.nodesService.updateNodesCollectionOfVoting(nodeDocs);
   }
 }

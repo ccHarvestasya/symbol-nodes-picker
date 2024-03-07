@@ -102,22 +102,22 @@ export class Node {
   /** Voting */
   @Prop(
     raw({
+      /** アカウント残高 */
+      balance: { type: BigInt },
+
       /** Votingキー */
       votingKey: {
         type: {
           /** 公開鍵 */
-          publicKey: { Type: String },
+          publicKey: { type: String },
 
           /** 開始エポック */
-          startEpoch: { Type: Number },
+          startEpoch: { type: Number },
 
           /** 終了エポック */
-          endEpoch: { Type: Number },
+          endEpoch: { type: Number },
         },
       },
-
-      /** アカウント残高 */
-      accountBalance: { type: BigInt },
 
       /**
        * 投票有無
