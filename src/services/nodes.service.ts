@@ -696,12 +696,16 @@ export class NodesService {
           startEpoch = votingKeys[maxIndex]?.startEpoch;
           endEpoch = votingKeys[maxIndex]?.endEpoch;
         }
-        const currentMosaic = accountInfo.account.mosaics?.filter(
-          (item) => item.id === '72C0212E67A08BCE',
+        // カレンシーモザイクID
+        const currencyMosaicId = await this.getCurrencyMosaicId();
+        const currencyMosaic = accountInfo.account.mosaics?.filter(
+          (item) => item.id === currencyMosaicId.toString(16).toUpperCase(),
         );
-        accountBalance = BigInt(currentMosaic[0]?.amount);
+        accountBalance = BigInt(currencyMosaic[0]?.amount);
+        // MinVoter
+        const minVoterBalance = await this.getMinVoterBalance();
         if (
-          3000000000000n <= accountBalance &&
+          3000000000000n <= minVoterBalance &&
           startEpoch <= nodeDoc.peer.finalization.epoch &&
           nodeDoc.peer.finalization.epoch <= endEpoch
         ) {
@@ -727,5 +731,25 @@ export class NodesService {
         this.logger.error(e);
       }
     }
+  }
+
+  /**
+   * カレンシーモザイクID取得
+   * @returns カレンシーモザイクID
+   */
+  private async getCurrencyMosaicId() {
+    const keyDto = new SettingKeyDto('currencyMosaicId');
+    const settingDoc = await this.settingsRepository.findOne(keyDto);
+    return BigInt(settingDoc.value);
+  }
+
+  /**
+   * 最小投票残高取得
+   * @returns 最小投票残高
+   */
+  private async getMinVoterBalance() {
+    const keyDto = new SettingKeyDto('minVoterBalance');
+    const settingDoc = await this.settingsRepository.findOne(keyDto);
+    return BigInt(settingDoc.value);
   }
 }

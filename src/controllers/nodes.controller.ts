@@ -26,7 +26,7 @@ export class NodesController {
 
     await this.updatePeer();
 
-    this.logger.log(' end  - ' + methodName);
+    this.logger.log('e n d - ' + methodName);
   }
 
   /**
@@ -52,7 +52,7 @@ export class NodesController {
 
     await this.updateApi();
 
-    this.logger.log(' end  - ' + methodName);
+    this.logger.log('e n d - ' + methodName);
   }
 
   /**
@@ -78,7 +78,7 @@ export class NodesController {
 
     await this.updateVoting();
 
-    this.logger.log(' end  - ' + methodName);
+    this.logger.log('e n d - ' + methodName);
   }
 
   /**

@@ -52,6 +52,7 @@ export class AppService {
       // 設定からタイムアウトを取得
       const timeout = this.configService.get<number>('connection.timeout');
 
+      let host = '';
       let networkGenerationHashSeed = '';
       // ノード情報登録
       for (const initNodeHost of initNodeHosts) {
@@ -92,6 +93,8 @@ export class AppService {
             createDto.peer.certificateExpirationDate =
               nodeInfo.certificateExpirationDate;
             await this.nodesRepository.create(createDto);
+            // ホスト退避
+            host = nodeInfo.host;
             // ジェネレーションハッシュシード退避
             networkGenerationHashSeed = nodeInfo.networkGenerationHashSeed;
           }
@@ -104,6 +107,20 @@ export class AppService {
       const settingCreateDto = new SettingCreateDto();
       settingCreateDto.key = 'networkGenerationHashSeed';
       settingCreateDto.value = networkGenerationHashSeed;
+      await this.settingsRepository.create(settingCreateDto);
+      // ネットワークプロパティ保存
+      const repoFactory = new RepositoryFactoryHttp(host);
+      const networkRepo = repoFactory.createNetworkRepository();
+      const networkProperties = await networkRepo.getNetworkProperties();
+      // カレンシーモザイクID
+      settingCreateDto.key = 'currencyMosaicId';
+      settingCreateDto.value =
+        networkProperties.chain.currencyMosaicId.replaceAll("'", '');
+      await this.settingsRepository.create(settingCreateDto);
+      // 最小投票残高
+      settingCreateDto.key = 'minVoterBalance';
+      settingCreateDto.value =
+        networkProperties.chain.minVoterBalance.replaceAll("'", '');
       await this.settingsRepository.create(settingCreateDto);
     }
 
