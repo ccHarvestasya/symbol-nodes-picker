@@ -19,7 +19,7 @@ export class NodesController {
   /**
    * [Cron]Peer更新
    */
-  @Cron('0 */7 * * * *')
+  @Cron('0 */5 * * * *')
   async cronUpdatePeer() {
     const methodName = 'cronUpdatePeer';
     this.logger.log('start - ' + methodName);
@@ -45,7 +45,7 @@ export class NodesController {
   /**
    * [Cron]Api更新
    */
-  @Cron('0 */13 * * * *')
+  @Cron('0 */17 * * * *')
   async cronUpdateApi() {
     const methodName = 'cronUpdateApi';
     this.logger.log('start - ' + methodName);
@@ -71,7 +71,7 @@ export class NodesController {
   /**
    * [Cron]Voting更新
    */
-  @Cron('0 */27 * * * *')
+  @Cron('0 23 * * * *')
   async cronUpdateVoting() {
     const methodName = 'cronUpdateVoting';
     this.logger.log('start - ' + methodName);

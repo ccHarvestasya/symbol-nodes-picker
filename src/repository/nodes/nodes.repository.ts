@@ -99,8 +99,8 @@ export class NodesRepository {
    * @param findDto 検索DTO
    * @returns ピアドキュメント配列
    */
-  async find(findDto: NodesFindDto): Promise<NodeDocument[]> {
-    return this.nodeModel.find(findDto).exec();
+  async find(): Promise<NodeDocument[]> {
+    return this.nodeModel.find().exec();
   }
 
   /**
@@ -109,6 +109,24 @@ export class NodesRepository {
    */
   async findOne(keyDto?: NodesKeyDto): Promise<NodeDocument> {
     return this.nodeModel.findOne(keyDto).exec();
+  }
+
+  /**
+   * Apiが活きているノードをランダムに1件取得
+   * @returns Nodeドキュメント
+   */
+  async findOneRandomAvailable() {
+    return this.nodeModel
+      .find({ 'api.isAvailable': true })
+      .skip(
+        Math.floor(
+          Math.random() *
+            (await this.nodeModel.find({ 'api.isAvailable': true }).exec())
+              .length,
+        ),
+      )
+      .limit(1)
+      .exec();
   }
 
   /**

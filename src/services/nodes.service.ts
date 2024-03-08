@@ -331,10 +331,8 @@ export class NodesService {
       // Nodesコレクション更新
       try {
         // Nodesコレクション存在チェック
-        const findDto = new NodesFindDto();
-        findDto.host = nodePeer.host;
-        findDto.publicKey = nodePeer.publicKey;
-        const nodeDoc = await this.nodesRepository.findOne(findDto);
+        const keyDto = new NodesKeyDto(nodePeer.host, nodePeer.publicKey);
+        const nodeDoc = await this.nodesRepository.findOne(keyDto);
 
         if (!nodeDoc) {
           // 登録
@@ -537,7 +535,7 @@ export class NodesService {
    * @param publicKey 公開鍵
    * @param timeout タイムアウト
    */
-  async updateNodesCollectionOfApiAsync(
+  private async updateNodesCollectionOfApiAsync(
     nodeDocs: NodeDocument[],
     timeout: number,
   ) {
@@ -654,7 +652,7 @@ export class NodesService {
    * @param publicKey 公開鍵
    * @param timeout タイムアウト
    */
-  async updateNodesCollectionOfVotingAsync(
+  private async updateNodesCollectionOfVotingAsync(
     nodeDocs: NodeDocument[],
     timeout: number,
   ) {
@@ -664,18 +662,26 @@ export class NodesService {
 
       this.logger.log(`[Voting Check] ${host}`);
 
+      let restGatewayHost = host;
+      if (!nodeDoc.api.isAvailable) {
+        const randNode = await this.nodesRepository.findOneRandomAvailable();
+        restGatewayHost = randNode[0].host;
+        this.logger.log(`[Voting Check] 確認ノード: ${restGatewayHost}`);
+      }
+
       // HTTPs利用可否
       const sdkExt = new SymbolSdkExt(timeout);
-      const isEnableHttps = await sdkExt.isEnableHttps(host);
+      const isEnableHttps = await sdkExt.isEnableHttps(restGatewayHost);
 
       // アカウント
       const repoFactoryHttp = new RepositoryFactoryHttp(
-        host,
+        restGatewayHost,
         isEnableHttps,
         timeout,
       );
       const accountRepo = repoFactoryHttp.createAccountRepository();
       const accountInfo = await accountRepo.getAccountInfo(publicKey);
+
       let votingPublicKey = '';
       let startEpoch = 0;
       let endEpoch = 0;

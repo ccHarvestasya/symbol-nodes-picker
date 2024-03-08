@@ -8,4 +8,4 @@ connection:
     - '001-sai-dual.symboltest.net'
   timeout: 3000
   request-count: 100
-  request-chunk: 15
+  request-chunk: 20

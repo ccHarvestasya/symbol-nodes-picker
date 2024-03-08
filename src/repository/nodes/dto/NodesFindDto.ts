@@ -1,4 +1,4 @@
 export class NodesFindDto {
-  host: string;
-  publicKey: string;
+  host?: string;
+  publicKey?: string;
 }
