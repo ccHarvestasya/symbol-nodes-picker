@@ -1,0 +1,11 @@
+db:
+  mongo:
+    uri: 'mongodb://127.0.0.1:27017/SymboLibrarian'
+connection:
+  init-host:
+    - '20.48.92.124'
+    - 'sym-test-01.opening-line.jp'
+    - '001-sai-dual.symboltest.net'
+  timeout: 3000
+  request-count: 200
+  request-chunk: 30

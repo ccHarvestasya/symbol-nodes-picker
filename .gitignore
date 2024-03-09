@@ -36,3 +36,5 @@ lerna-debug.log*
 
 # Cert
 **/cert/*
+
+**/src/config/config.yaml
