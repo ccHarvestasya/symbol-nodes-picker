@@ -1,6 +1,6 @@
 import { NodesCreateDto } from '@/repository/nodes/dto/NodesCreateDto';
 import { NodesRepository } from '@/repository/nodes/nodes.repository';
-import { SettingCreateDto } from '@/repository/settings/dto/sSettingCreateDto';
+import { SettingCreateDto } from '@/repository/settings/dto/SettingCreateDto';
 import { SettingsRepository } from '@/repository/settings/settings.repository';
 import { NodesService } from '@/services/nodes.service';
 import { Injectable, Logger } from '@nestjs/common';

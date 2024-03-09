@@ -6,7 +6,7 @@ import {
 } from '@/repository/nodes/dto/NodesFindDto';
 import { NodesKeyDto } from '@/repository/nodes/dto/NodesKeyDto';
 import { NodesRepository } from '@/repository/nodes/nodes.repository';
-import { SettingKeyDto } from '@/repository/settings/dto/sSettingKeyDto';
+import { SettingKeyDto } from '@/repository/settings/dto/SettingKeyDto';
 import { SettingsRepository } from '@/repository/settings/settings.repository';
 import { NodeDocument } from '@/schema/node.schema';
 import { Injectable, Logger } from '@nestjs/common';
