@@ -1,5 +1,8 @@
 import { NodesCreateDto } from '@/repository/nodes/dto/NodesCreateDto';
-import { NodesFindDto } from '@/repository/nodes/dto/NodesFindDto';
+import {
+  NodesFindCondition,
+  NodesFindDto,
+} from '@/repository/nodes/dto/NodesFindDto';
 import { NodesUpdateDto } from '@/repository/nodes/dto/NodesUpdateDto';
 import { NodesKeyDto } from '@/repository/nodes/dto/nodesKeyDto';
 import { Node, NodeDocument } from '@/schema/node.schema';
@@ -19,16 +22,16 @@ export class NodesRepository {
   constructor(@InjectModel(Node.name) private nodeModel: Model<NodeDocument>) {}
 
   /**
-   * ピアコレクション登録
+   * Nodesコレクション登録
    * @param createDto 登録DTO
-   * @returns ピアドキュメント
+   * @returns Nodesドキュメント
    */
   async create(createDto: NodesCreateDto) {
     return await this.nodeModel.create(createDto);
   }
 
   /**
-   * ピアコレクション単一更新
+   * Nodesコレクション単一更新
    * @param keyDto キーDTO
    * @param updateDto 更新DTO
    * @returns 更新結果
@@ -41,11 +44,11 @@ export class NodesRepository {
   }
 
   /**
-   * ピアコレクション検索
+   * Nodesコレクション検索
    * チェック日時が古い方から取得件数指定で検索
    * @param findDto 検索DTO
    * @param limit 取得件数
-   * @returns ピアドキュメント配列
+   * @returns Nodesドキュメント配列
    */
   async findIsOldLimit(
     findDto: NodesFindDto,
@@ -63,7 +66,7 @@ export class NodesRepository {
    * チェック日時が古い方から取得件数指定で検索
    * @param findDto 検索DTO
    * @param limit 取得件数
-   * @returns ピアドキュメント配列
+   * @returns Nodesドキュメント配列
    */
   async findApiIsOldLimit(
     findDto: NodesFindDto,
@@ -81,7 +84,7 @@ export class NodesRepository {
    * チェック日時が古い方から取得件数指定で検索
    * @param findDto 検索DTO
    * @param limit 取得件数
-   * @returns ピアドキュメント配列
+   * @returns Nodesドキュメント配列
    */
   async findVotingIsOldLimit(
     findDto: NodesFindDto,
@@ -95,17 +98,24 @@ export class NodesRepository {
   }
 
   /**
-   * ピアコレクション検索
+   * Nodesコレクション検索
    * @param findDto 検索DTO
-   * @returns ピアドキュメント配列
+   * @returns Nodesドキュメント配列
    */
-  async find(): Promise<NodeDocument[]> {
-    return this.nodeModel.find().exec();
+  async find(condition: NodesFindCondition, limit: number) {
+    if (limit === 0) {
+      return this.nodeModel.find(condition).exec();
+    }
+    // return this.nodeModel.find(condition).limit(limit).exec();
+    return this.nodeModel
+      .aggregate([{ $match: condition }, { $sample: { size: limit } }])
+      .limit(limit)
+      .exec();
   }
 
   /**
-   * ピアコレクション単一検索
-   * @returns ピアドキュメント
+   * Nodesコレクション単一検索
+   * @returns Nodesドキュメント
    */
   async findOne(keyDto?: NodesKeyDto): Promise<NodeDocument> {
     return this.nodeModel.findOne(keyDto).exec();
@@ -130,8 +140,8 @@ export class NodesRepository {
   }
 
   /**
-   * ピアコレクション検索更新
-   * @returns ピアドキュメント
+   * Nodesコレクション検索更新
+   * @returns Nodesドキュメント
    */
   async findOneAndUpdate(
     keyDto: NodesKeyDto,
@@ -141,8 +151,8 @@ export class NodesRepository {
   }
 
   /**
-   * ピアコレクション全件検索
-   * @returns ピアドキュメント配列
+   * Nodesコレクション全件検索
+   * @returns Nodesドキュメント配列
    */
   async findAll(): Promise<NodeDocument[]> {
     return this.nodeModel.find().exec();

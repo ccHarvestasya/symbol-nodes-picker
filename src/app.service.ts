@@ -2,6 +2,7 @@ import { NodesCreateDto } from '@/repository/nodes/dto/NodesCreateDto';
 import { NodesRepository } from '@/repository/nodes/nodes.repository';
 import { SettingCreateDto } from '@/repository/settings/dto/SettingCreateDto';
 import { SettingsRepository } from '@/repository/settings/settings.repository';
+import { NodesService } from '@/services/nodes.service';
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
@@ -27,6 +28,7 @@ export class AppService {
     private readonly configService: ConfigService,
     private readonly settingsRepository: SettingsRepository,
     private readonly nodesRepository: NodesRepository,
+    private readonly nodesService: NodesService,
   ) {}
 
   /**
@@ -122,8 +124,55 @@ export class AppService {
       settingCreateDto.value =
         networkProperties.chain.minVoterBalance.replaceAll("'", '');
       await this.settingsRepository.create(settingCreateDto);
+
+      // 初回取り込み
+      await this.updatePeer();
+      await this.updateApi();
+      await this.updateVoting();
     }
 
     this.logger.verbose('e n d - ' + methodName);
+  }
+
+  /**
+   * Peer更新
+   */
+  private async updatePeer() {
+    // Nodesコレクションからチェック日時が古い方から取得
+    const nodeDocs = await this.nodesService.getNodeDocCheckedOldest();
+    // ジェネレーションハッシュシード
+    const networkGenerationHashSeed =
+      await this.nodesService.getNetworkGenerationHashSeed();
+    // NodeNodesマップ取得
+    const nodePeersMap = await this.nodesService.getNodePeersMap(
+      nodeDocs,
+      networkGenerationHashSeed,
+    );
+
+    // Nodesコレクション登録/更新
+    await this.nodesService.updateNodesCollection(
+      nodePeersMap,
+      networkGenerationHashSeed,
+    );
+  }
+
+  /**
+   * Api更新
+   */
+  private async updateApi() {
+    // Nodesコレクションからチェック日時が古い方から取得
+    const nodeDocs = await this.nodesService.getNodeDocApiCheckedOldest();
+    // NodesコレクションApi更新
+    await this.nodesService.updateNodesCollectionOfApi(nodeDocs);
+  }
+
+  /**
+   * Voting更新
+   */
+  private async updateVoting() {
+    // Nodesコレクションからチェック日時が古い方から取得
+    const nodeDocs = await this.nodesService.getNodeDocVotingCheckedOldest();
+    // NodesコレクションVoting更新
+    await this.nodesService.updateNodesCollectionOfVoting(nodeDocs);
   }
 }

@@ -1,5 +1,6 @@
+import { NodesFindCondition } from '@/repository/nodes/dto/NodesFindDto';
 import { NodesService } from '@/services/nodes.service';
-import { Controller, Get, Logger } from '@nestjs/common';
+import { Controller, Get, Logger, Query } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 
 /**
@@ -10,11 +11,61 @@ export class NodesController {
   /**  ロガー */
   private readonly logger = new Logger(NodesController.name);
 
+  private execCron = false;
+
   /**
    * コンストラクタ
    * @param nodesService Nodesサービス
    */
   constructor(private readonly nodesService: NodesService) {}
+
+  /**
+   * [Get]Nodes
+   */
+  @Get('/')
+  async getNodes(
+    @Query('limit') limit: string,
+    @Query('ssl') ssl: string,
+    @Query('peerAvailable') peerAvailable: string,
+    @Query('apiAvailable') apiAvailable: string,
+    @Query('votingAvailable') votingAvailable: string,
+    @Query('fromTxSearchCount') fromTxSearchCount: string,
+  ) {
+    const condition: NodesFindCondition = {};
+
+    if (ssl === undefined || ssl === 'true') {
+      condition['api.isHttpsEnabled'] = true;
+    }
+
+    if (peerAvailable !== 'false') {
+      condition['peer.isAvailable'] = true;
+    }
+
+    if (apiAvailable !== 'false') {
+      condition['api.isAvailable'] = true;
+    }
+
+    if (votingAvailable === 'true') {
+      condition['voting.isAvailable'] = true;
+    }
+
+    const numFromTxSearchCount = this.parseNumber(fromTxSearchCount);
+    if (!isNaN(numFromTxSearchCount)) {
+      condition['api.txSearchCountPerPage'] = { $gte: numFromTxSearchCount };
+    }
+
+    let numLimit = this.parseNumber(limit);
+    if (isNaN(numLimit)) {
+      numLimit = 0;
+    }
+
+    const outputJson = await this.nodesService.getNodesList(
+      condition,
+      numLimit,
+    );
+
+    return outputJson;
+  }
 
   /**
    * [Cron]Peer更新
@@ -24,7 +75,11 @@ export class NodesController {
     const methodName = 'cronUpdatePeer';
     this.logger.log('start - ' + methodName);
 
-    await this.updatePeer();
+    if (!this.execCron) {
+      this.execCron = true;
+      await this.updatePeer();
+      this.execCron = false;
+    }
 
     this.logger.log('e n d - ' + methodName);
   }
@@ -45,12 +100,16 @@ export class NodesController {
   /**
    * [Cron]Api更新
    */
-  @Cron('0 */17 * * * *')
+  @Cron('0 */7 * * * *')
   async cronUpdateApi() {
     const methodName = 'cronUpdateApi';
     this.logger.log('start - ' + methodName);
 
-    await this.updateApi();
+    if (!this.execCron) {
+      this.execCron = true;
+      await this.updateApi();
+      this.execCron = false;
+    }
 
     this.logger.log('e n d - ' + methodName);
   }
@@ -71,13 +130,16 @@ export class NodesController {
   /**
    * [Cron]Voting更新
    */
-  @Cron('0 23 * * * *')
+  @Cron('0 13 * * * *')
   async cronUpdateVoting() {
     const methodName = 'cronUpdateVoting';
     this.logger.log('start - ' + methodName);
 
-    await this.updateVoting();
-
+    if (!this.execCron) {
+      this.execCron = true;
+      await this.updateVoting();
+      this.execCron = false;
+    }
     this.logger.log('e n d - ' + methodName);
   }
 
@@ -134,5 +196,10 @@ export class NodesController {
     const nodeDocs = await this.nodesService.getNodeDocVotingCheckedOldest();
     // NodesコレクションVoting更新
     await this.nodesService.updateNodesCollectionOfVoting(nodeDocs);
+  }
+
+  private parseNumber(str: string): number {
+    if (typeof str !== 'string') return NaN;
+    return Number(str);
   }
 }

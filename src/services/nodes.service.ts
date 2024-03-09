@@ -1,6 +1,9 @@
 import { BaseNodesDto } from '@/repository/nodes/dto/BaseNodesDto';
 import { NodesCreateDto } from '@/repository/nodes/dto/NodesCreateDto';
-import { NodesFindDto } from '@/repository/nodes/dto/NodesFindDto';
+import {
+  NodesFindCondition,
+  NodesFindDto,
+} from '@/repository/nodes/dto/NodesFindDto';
 import { NodesKeyDto } from '@/repository/nodes/dto/nodesKeyDto';
 import { NodesRepository } from '@/repository/nodes/nodes.repository';
 import { SettingKeyDto } from '@/repository/settings/dto/SettingKeyDto';
@@ -236,6 +239,76 @@ export class NodesService {
     const keyDto = new SettingKeyDto('networkGenerationHashSeed');
     const settingDoc = await this.settingsRepository.findOne(keyDto);
     return settingDoc.value;
+  }
+
+  /**
+   * ノードリスト
+   * @returns ノードリスト
+   */
+  async getNodesList(condition: NodesFindCondition, limit: number) {
+    const nodeDocs = await this.nodesRepository.find(condition, limit);
+
+    const outputJson = [];
+    for (const nodeDoc of nodeDocs) {
+      let finalization = {
+        height: nodeDoc.peer.finalization.height?.toString(),
+        epoch: nodeDoc.peer.finalization.epoch,
+        point: nodeDoc.peer.finalization.point,
+        hash: nodeDoc.peer.finalization.hash,
+      };
+      if (finalization.height === undefined) finalization = undefined;
+
+      let votingKey = {
+        publicKey: nodeDoc.voting.votingKey.publicKey,
+        startEpoch: nodeDoc.voting.votingKey.startEpoch,
+        endEpoch: nodeDoc.voting.votingKey.endEpoch,
+      };
+      if (votingKey.publicKey === undefined) votingKey = undefined;
+
+      const json = {
+        version: nodeDoc.peer.version,
+        host: nodeDoc.host,
+        friendlyName: nodeDoc.peer.friendlyName,
+        publicKey: nodeDoc.publicKey,
+        port: nodeDoc.peer.port,
+        roles: nodeDoc.peer.roles,
+        networkIdentifier: nodeDoc.peer.networkIdentifier,
+        networkGenerationHashSeed: nodeDoc.peer.networkGenerationHashSeed,
+        certificateExpirationDate:
+          nodeDoc.peer.certificateExpirationDate?.getTime(),
+        peerStatus: {
+          isAvailable: nodeDoc.peer.isAvailable,
+          lastStatusCheck: nodeDoc.peer.lastStatusCheck?.getTime(),
+        },
+        apiStatus: {
+          restGatewayUrl: nodeDoc.api.restGatewayUrl,
+          isAvailable: nodeDoc.api.isAvailable,
+          isHttpsEnabled: nodeDoc.api.isHttpsEnabled,
+          harvesters: nodeDoc.api.harvesters,
+          lastStatusCheck: nodeDoc.api.lastStatusCheck?.getTime(),
+          webSocket: {
+            isAvailable: nodeDoc.api.webSocket.isAvailable,
+            wss: nodeDoc.api.webSocket.wss,
+            url: nodeDoc.api.webSocket.url,
+          },
+          nodePublicKey: nodeDoc.peer.nodePublicKey,
+          chainHeight: nodeDoc.peer.chainHeight?.toString(),
+          finalization: finalization,
+          txSearchCountPerPage: nodeDoc.api.txSearchCountPerPage,
+        },
+        votingStatus: {
+          votingKey: votingKey,
+          balance: nodeDoc.voting.balance?.toString(),
+          isVotingEnabled: nodeDoc.voting.isVotingEnabled,
+          lastStatusCheck: nodeDoc.voting.lastStatusCheck?.getTime(),
+        },
+        lastAvailable: nodeDoc.peer.lastStatusCheck?.getTime(),
+      };
+
+      outputJson.push(json);
+    }
+
+    return outputJson;
   }
 
   /**
@@ -665,6 +738,7 @@ export class NodesService {
       let restGatewayHost = host;
       if (!nodeDoc.api.isAvailable) {
         const randNode = await this.nodesRepository.findOneRandomAvailable();
+        if (randNode[0]?.host === undefined) return;
         restGatewayHost = randNode[0].host;
         this.logger.log(`[Voting Check] 確認ノード: ${restGatewayHost}`);
       }
@@ -682,9 +756,9 @@ export class NodesService {
       const accountRepo = repoFactoryHttp.createAccountRepository();
       const accountInfo = await accountRepo.getAccountInfo(publicKey);
 
-      let votingPublicKey = '';
-      let startEpoch = 0;
-      let endEpoch = 0;
+      let votingPublicKey: string | undefined;
+      let startEpoch: number | undefined;
+      let endEpoch: number | undefined;
       let accountBalance = 0n;
       let isVotingEnabled = false;
       if (accountInfo !== undefined) {
