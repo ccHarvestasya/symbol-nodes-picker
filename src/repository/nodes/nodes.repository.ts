@@ -3,8 +3,8 @@ import {
   NodesFindCondition,
   NodesFindDto,
 } from '@/repository/nodes/dto/NodesFindDto';
+import { NodesKeyDto } from '@/repository/nodes/dto/NodesKeyDto';
 import { NodesUpdateDto } from '@/repository/nodes/dto/NodesUpdateDto';
-import { NodesKeyDto } from '@/repository/nodes/dto/nodesKeyDto';
 import { Node, NodeDocument } from '@/schema/node.schema';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';

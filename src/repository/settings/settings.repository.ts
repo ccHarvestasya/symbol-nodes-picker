@@ -1,6 +1,6 @@
-import { SettingCreateDto } from '@/repository/settings/dto/SettingCreateDto';
-import { SettingKeyDto } from '@/repository/settings/dto/SettingKeyDto';
-import { SettingUpdateDto } from '@/repository/settings/dto/SettingUpdateDto';
+import { SettingCreateDto } from '@/repository/settings/dto/sSettingCreateDto';
+import { SettingKeyDto } from '@/repository/settings/dto/sSettingKeyDto';
+import { SettingUpdateDto } from '@/repository/settings/dto/sSettingUpdateDto';
 import { Setting, SettingDocument } from '@/schema/setting.schema';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';

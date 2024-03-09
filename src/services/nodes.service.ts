@@ -4,9 +4,9 @@ import {
   NodesFindCondition,
   NodesFindDto,
 } from '@/repository/nodes/dto/NodesFindDto';
-import { NodesKeyDto } from '@/repository/nodes/dto/nodesKeyDto';
+import { NodesKeyDto } from '@/repository/nodes/dto/NodesKeyDto';
 import { NodesRepository } from '@/repository/nodes/nodes.repository';
-import { SettingKeyDto } from '@/repository/settings/dto/SettingKeyDto';
+import { SettingKeyDto } from '@/repository/settings/dto/sSettingKeyDto';
 import { SettingsRepository } from '@/repository/settings/settings.repository';
 import { NodeDocument } from '@/schema/node.schema';
 import { Injectable, Logger } from '@nestjs/common';
