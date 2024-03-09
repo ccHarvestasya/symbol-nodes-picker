@@ -33,20 +33,28 @@ export class NodesController {
   ) {
     const condition: NodesFindCondition = {};
 
-    if (ssl === undefined || ssl === 'true') {
+    if (ssl === 'true') {
       condition['api.isHttpsEnabled'] = true;
+    } else if (ssl === 'false') {
+      condition['api.isHttpsEnabled'] = false;
     }
 
-    if (peerAvailable !== 'false') {
+    if (peerAvailable === 'true') {
       condition['peer.isAvailable'] = true;
+    } else if (peerAvailable === 'false') {
+      condition['peer.isAvailable'] = false;
     }
 
-    if (apiAvailable !== 'false') {
+    if (apiAvailable === 'true') {
       condition['api.isAvailable'] = true;
+    } else if (apiAvailable === 'false') {
+      condition['api.isAvailable'] = false;
     }
 
     if (votingAvailable === 'true') {
       condition['voting.isAvailable'] = true;
+    } else if (votingAvailable === 'false') {
+      condition['voting.isAvailable'] = false;
     }
 
     const numFromTxSearchCount = this.parseNumber(fromTxSearchCount);
