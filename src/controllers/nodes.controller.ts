@@ -32,7 +32,7 @@ export class NodesController {
   ) {
     const condition: NodesFindCondition = {};
 
-    if (ssl === undefined) {
+    if (ssl === undefined || ssl === 'true') {
       condition['api.isHttpsEnabled'] = true;
     } else if (ssl === 'false') {
       condition['api.isHttpsEnabled'] = false;
@@ -44,13 +44,13 @@ export class NodesController {
       condition['peer.isAvailable'] = false;
     }
 
-    if (apiAvailable === undefined) {
+    if (apiAvailable === undefined || apiAvailable === 'true') {
       condition['api.isAvailable'] = true;
     } else if (apiAvailable === 'false') {
       condition['api.isAvailable'] = false;
     }
 
-    if (wsAvailable === 'true') {
+    if (wsAvailable === undefined || wsAvailable === 'true') {
       condition['api.webSocket.isAvailable'] = true;
     } else if (wsAvailable === 'false') {
       condition['api.webSocket.isAvailable'] = false;
