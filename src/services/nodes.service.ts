@@ -775,7 +775,9 @@ export class NodesService {
         const currencyMosaic = accountInfo.account.mosaics?.filter(
           (item) => item.id === currencyMosaicId.toString(16).toUpperCase(),
         );
-        accountBalance = BigInt(currencyMosaic[0]?.amount);
+        if (currencyMosaic[0] !== undefined) {
+          accountBalance = BigInt(currencyMosaic[0].amount);
+        }
         // MinVoter
         const minVoterBalance = await this.getMinVoterBalance();
         if (
