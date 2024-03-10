@@ -209,7 +209,9 @@ export class NodesService {
    */
   async getNodeDocApiCheckedOldest() {
     const findDto = new NodesFindDto();
-    const limit = this.configService.get<number>('connection.request-count');
+    const limit = this.configService.get<number>(
+      'connection.request-api-count',
+    );
     const nodeDocs = await this.nodesRepository.findApiIsOldLimit(
       findDto,
       limit,
@@ -223,7 +225,9 @@ export class NodesService {
    */
   async getNodeDocVotingCheckedOldest() {
     const findDto = new NodesFindDto();
-    const limit = this.configService.get<number>('connection.request-count');
+    const limit = this.configService.get<number>(
+      'connection.request-voting-count',
+    );
     const nodeDocs = await this.nodesRepository.findVotingIsOldLimit(
       findDto,
       limit,

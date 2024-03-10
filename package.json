@@ -1,7 +1,7 @@
 {
-  "name": "symbolibrarian",
+  "name": "symbol-nodes-picker",
   "version": "0.0.1",
-  "description": "Symbol Nodes List",
+  "description": "Symbol Nodes Picker",
   "author": "",
   "private": true,
   "license": "UNLICENSED",

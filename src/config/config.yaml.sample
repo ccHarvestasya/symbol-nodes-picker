@@ -7,5 +7,7 @@ connection:
     - 'sym-test-01.opening-line.jp'
     - '001-sai-dual.symboltest.net'
   timeout: 3000
-  request-count: 200
+  request-count: 100
+  request-api-count: 100
+  request-voting-count: 100
   request-chunk: 30

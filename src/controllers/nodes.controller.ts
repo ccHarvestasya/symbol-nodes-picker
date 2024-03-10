@@ -11,8 +11,6 @@ export class NodesController {
   /**  ロガー */
   private readonly logger = new Logger(NodesController.name);
 
-  private execCron = false;
-
   /**
    * コンストラクタ
    * @param nodesService Nodesサービス
@@ -34,7 +32,7 @@ export class NodesController {
   ) {
     const condition: NodesFindCondition = {};
 
-    if (ssl === 'true') {
+    if (ssl === undefined) {
       condition['api.isHttpsEnabled'] = true;
     } else if (ssl === 'false') {
       condition['api.isHttpsEnabled'] = false;
@@ -46,7 +44,7 @@ export class NodesController {
       condition['peer.isAvailable'] = false;
     }
 
-    if (apiAvailable === 'true') {
+    if (apiAvailable === undefined) {
       condition['api.isAvailable'] = true;
     } else if (apiAvailable === 'false') {
       condition['api.isAvailable'] = false;
@@ -69,9 +67,12 @@ export class NodesController {
       condition['api.txSearchCountPerPage'] = { $gte: numFromTxSearchCount };
     }
 
-    let numLimit = this.parseNumber(limit);
-    if (isNaN(numLimit)) {
-      numLimit = 0;
+    let numLimit = 4;
+    if (limit !== undefined) {
+      numLimit = this.parseNumber(limit);
+      if (isNaN(numLimit)) {
+        numLimit = 0;
+      }
     }
 
     const outputJson = await this.nodesService.getNodesList(
@@ -85,16 +86,12 @@ export class NodesController {
   /**
    * [Cron]Peer更新
    */
-  @Cron('0 */10 * * * *')
+  @Cron('0 */7 * * * *')
   async cronUpdatePeer() {
     const methodName = 'cronUpdatePeer';
     this.logger.log('start - ' + methodName);
 
-    if (!this.execCron) {
-      this.execCron = true;
-      await this.updatePeer();
-      this.execCron = false;
-    }
+    await this.updatePeer();
 
     this.logger.log('e n d - ' + methodName);
   }
@@ -115,16 +112,12 @@ export class NodesController {
   /**
    * [Cron]Api更新
    */
-  @Cron('0 */15 * * * *')
+  @Cron('0 */11 * * * *')
   async cronUpdateApi() {
     const methodName = 'cronUpdateApi';
     this.logger.log('start - ' + methodName);
 
-    if (!this.execCron) {
-      this.execCron = true;
-      await this.updateApi();
-      this.execCron = false;
-    }
+    await this.updateApi();
 
     this.logger.log('e n d - ' + methodName);
   }
@@ -145,16 +138,13 @@ export class NodesController {
   /**
    * [Cron]Voting更新
    */
-  @Cron('0 58 * * * *')
+  @Cron('0 */13 * * * *')
   async cronUpdateVoting() {
     const methodName = 'cronUpdateVoting';
     this.logger.log('start - ' + methodName);
 
-    if (!this.execCron) {
-      this.execCron = true;
-      await this.updateVoting();
-      this.execCron = false;
-    }
+    await this.updateVoting();
+
     this.logger.log('e n d - ' + methodName);
   }
 
