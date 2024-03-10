@@ -38,3 +38,4 @@ lerna-debug.log*
 **/cert/*
 
 **/src/config/config.yaml
+**/pm2.json

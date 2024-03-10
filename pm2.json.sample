@@ -1,0 +1,7 @@
+{
+  "name": "SymbolNodesPicker",
+  "script": "dist/main.js",
+  "log-date-format": "YYYY-MM-DD HH:mm:ss Z",
+  "env": { "NODE_ENV": "production" },
+  "env_development": { "NODE_ENV": "development" }
+}
