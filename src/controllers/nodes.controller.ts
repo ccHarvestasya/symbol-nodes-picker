@@ -51,7 +51,7 @@ export class NodesController {
     }
 
     if (wsAvailable === 'true') {
-      condition['api.websocket.isAvailable'] = true;
+      condition['api.webSocket.isAvailable'] = true;
     } else if (wsAvailable === 'false') {
       condition['api.webSocket.isAvailable'] = false;
     }
