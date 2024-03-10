@@ -1,6 +1,6 @@
 db:
   mongo:
-    uri: 'mongodb://127.0.0.1:27017/SymboLibrarian'
+    uri: 'mongodb://127.0.0.1:27017/SymboLNodesPicker'
 connection:
   init-host:
     - '20.48.92.124'
