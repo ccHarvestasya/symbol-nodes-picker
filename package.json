@@ -17,7 +17,14 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "start:pm2": "pm2 start dist/main.js --name SymbolNodesPicker",
+    "restart:pm2": "pm2 restart SymbolNodesPicker",
+    "stop:pm2": "pm2 stop SymbolNodesPicker",
+    "logs:pm2": "pm2 logs SymbolNodesPicker",
+    "flush:pm2": "pm2 flush SymbolNodesPicker",
+    "show:pm2": "pm2 show SymbolNodesPicker",
+    "monit:pm2": "pm2 monit"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",
