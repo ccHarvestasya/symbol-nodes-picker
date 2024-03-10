@@ -8,5 +8,6 @@ export type NodesFindCondition = {
   'api.isHttpsEnabled'?: boolean;
   'api.txSearchCountPerPage'?: { $gte: number };
   'api.isAvailable'?: boolean;
+  'api.webSocket.isAvailable'?: boolean;
   'voting.isAvailable'?: boolean;
 };

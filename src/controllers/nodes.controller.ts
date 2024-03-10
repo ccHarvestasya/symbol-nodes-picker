@@ -28,6 +28,7 @@ export class NodesController {
     @Query('ssl') ssl: string,
     @Query('peerAvailable') peerAvailable: string,
     @Query('apiAvailable') apiAvailable: string,
+    @Query('wsAvailable') wsAvailable: string,
     @Query('votingAvailable') votingAvailable: string,
     @Query('fromTxSearchCount') fromTxSearchCount: string,
   ) {
@@ -49,6 +50,12 @@ export class NodesController {
       condition['api.isAvailable'] = true;
     } else if (apiAvailable === 'false') {
       condition['api.isAvailable'] = false;
+    }
+
+    if (wsAvailable === 'true') {
+      condition['api.websocket.isAvailable'] = true;
+    } else if (wsAvailable === 'false') {
+      condition['api.webSocket.isAvailable'] = false;
     }
 
     if (votingAvailable === 'true') {
