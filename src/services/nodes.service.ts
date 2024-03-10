@@ -361,13 +361,20 @@ export class NodesService {
           }
         }
 
-        // 対象のネットワークジェネレーションハッシュのみ取り出す
         if (nodePeers !== undefined) {
+          // 対象のネットワークジェネレーションハッシュのみ取り出す
           nodePeers = nodePeers.filter((item) => {
             if (item.networkGenerationHashSeed === networkGenerationHashSeed) {
               return true;
             }
             return false;
+          });
+          // ローカルループバックアドレス除外
+          nodePeers = nodePeers.filter((item) => {
+            if (item.host === '127.0.0.1' || item.host === 'localhost') {
+              return false;
+            }
+            return true;
           });
 
           for (const nodePeer of nodePeers) {
