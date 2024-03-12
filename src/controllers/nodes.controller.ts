@@ -2,6 +2,7 @@ import { NodesFindCondition } from '@/repository/nodes/dto/NodesFindDto';
 import { NodesService } from '@/services/nodes.service';
 import { Controller, Get, Logger, Query } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
+import { URL } from 'url';
 
 /**
  * Nodes コントローラ
@@ -96,18 +97,18 @@ export class NodesController {
     this.logger.log('e n d - ' + methodName);
   }
 
-  /**
-   * [Get]Peer更新
-   */
-  @Get('peer')
-  async getUpdatePeer(): Promise<void> {
-    const methodName = 'getUpdatePeer';
-    this.logger.log('start - ' + methodName);
+  // /**
+  //  * [Get]Peer更新
+  //  */
+  // @Get('peer')
+  // async getUpdatePeer(): Promise<void> {
+  //   const methodName = 'getUpdatePeer';
+  //   this.logger.log('start - ' + methodName);
 
-    await this.updatePeer();
+  //   await this.updatePeer();
 
-    this.logger.log('e n d - ' + methodName);
-  }
+  //   this.logger.log('e n d - ' + methodName);
+  // }
 
   /**
    * [Cron]Api更新
@@ -122,18 +123,18 @@ export class NodesController {
     this.logger.log('e n d - ' + methodName);
   }
 
-  /**
-   * [Get]Api更新
-   */
-  @Get('api')
-  async getUpdateApi(): Promise<void> {
-    const methodName = 'getUpdateApi';
-    this.logger.log('start - ' + methodName);
+  // /**
+  //  * [Get]Api更新
+  //  */
+  // @Get('api')
+  // async getUpdateApi(): Promise<void> {
+  //   const methodName = 'getUpdateApi';
+  //   this.logger.log('start - ' + methodName);
 
-    await this.updateApi();
+  //   await this.updateApi();
 
-    this.logger.log('e n d - ' + methodName);
-  }
+  //   this.logger.log('e n d - ' + methodName);
+  // }
 
   /**
    * [Cron]Voting更新
@@ -148,25 +149,32 @@ export class NodesController {
     this.logger.log('e n d - ' + methodName);
   }
 
-  /**
-   * [Get]Voting更新
-   */
-  @Get('voting')
-  async getUpdateVoting(): Promise<void> {
-    const methodName = 'getUpdateVoting';
-    this.logger.log('start - ' + methodName);
+  // /**
+  //  * [Get]Voting更新
+  //  */
+  // @Get('voting')
+  // async getUpdateVoting(): Promise<void> {
+  //   const methodName = 'getUpdateVoting';
+  //   this.logger.log('start - ' + methodName);
 
-    await this.updateVoting();
+  //   await this.updateVoting();
 
-    this.logger.log('e n d - ' + methodName);
-  }
+  //   this.logger.log('e n d - ' + methodName);
+  // }
 
   /**
    * Peer更新
    */
   private async updatePeer() {
     // Nodesコレクションからチェック日時が古い方から取得
-    const nodeDocs = await this.nodesService.getNodeDocCheckedOldest();
+    let nodeDocs = await this.nodesService.getNodeDocCheckedOldest();
+    nodeDocs = nodeDocs.filter((item) => {
+      if (URL.canParse(`http://${item.host}`)) {
+        return true;
+      }
+      return false;
+    });
+
     // ジェネレーションハッシュシード
     const networkGenerationHashSeed =
       await this.nodesService.getNetworkGenerationHashSeed();
@@ -188,7 +196,13 @@ export class NodesController {
    */
   private async updateApi() {
     // Nodesコレクションからチェック日時が古い方から取得
-    const nodeDocs = await this.nodesService.getNodeDocApiCheckedOldest();
+    let nodeDocs = await this.nodesService.getNodeDocApiCheckedOldest();
+    nodeDocs = nodeDocs.filter((item) => {
+      if (URL.canParse(`http://${item.host}`)) {
+        return true;
+      }
+      return false;
+    });
     // NodesコレクションApi更新
     await this.nodesService.updateNodesCollectionOfApi(nodeDocs);
   }

@@ -19,6 +19,7 @@ import {
 import { Listener } from 'symbol-sdk-ext/dist/infrastructure';
 import { ChainInfo } from 'symbol-sdk-ext/dist/model/blockchain';
 import { NodeInfo, NodePeer } from 'symbol-sdk-ext/dist/model/node';
+import { URL } from 'url';
 
 /** Nodesサービス */
 @Injectable()
@@ -90,7 +91,14 @@ export class NodesService {
     networkGenerationHashSeed: string,
   ) {
     // マップを配列に変換
-    const nodePeers: NodePeer[] = [...nodePeersMap.values()];
+    let nodePeers: NodePeer[] = [...nodePeersMap.values()];
+
+    nodePeers = nodePeers.filter((item) => {
+      if (URL.canParse(`http://${item.host}`)) {
+        return true;
+      }
+      return false;
+    });
 
     // 設定からタイムアウトを取得
     const timeout = this.configService.get<number>('connection.timeout');
