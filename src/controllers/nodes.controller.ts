@@ -169,7 +169,10 @@ export class NodesController {
     // Nodesコレクションからチェック日時が古い方から取得
     let nodeDocs = await this.nodesService.getNodeDocCheckedOldest();
     nodeDocs = nodeDocs.filter((item) => {
-      if (URL.canParse(`http://${item.host}`)) {
+      if (
+        item.host.indexOf('.') !== -1 &&
+        URL.canParse(`http://${item.host}`)
+      ) {
         return true;
       }
       return false;
@@ -198,7 +201,10 @@ export class NodesController {
     // Nodesコレクションからチェック日時が古い方から取得
     let nodeDocs = await this.nodesService.getNodeDocApiCheckedOldest();
     nodeDocs = nodeDocs.filter((item) => {
-      if (URL.canParse(`http://${item.host}`)) {
+      if (
+        item.host.indexOf('.') !== -1 &&
+        URL.canParse(`http://${item.host}`)
+      ) {
         return true;
       }
       return false;

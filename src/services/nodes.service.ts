@@ -94,7 +94,10 @@ export class NodesService {
     let nodePeers: NodePeer[] = [...nodePeersMap.values()];
 
     nodePeers = nodePeers.filter((item) => {
-      if (URL.canParse(`http://${item.host}`)) {
+      if (
+        item.host.indexOf('.') !== -1 &&
+        URL.canParse(`http://${item.host}`)
+      ) {
         return true;
       }
       return false;
